@@ -15,7 +15,7 @@ read at the start of the next prompt, and errors are fixed before moving on.
 - [x] `TGLabTest.Simulation.asmdef` — references `UnityEngine` only
 - [x] `TGLabTest.Gameplay.asmdef` — references Simulation, Zenject, Input System, UniTask
 - [x] `TGLabTest.EditorTools.asmdef` — Editor platform only; references Simulation
-- [ ] Delete `Assets/InputSystem_Actions.inputactions` in the Editor **(you)**
+- [x] Delete `Assets/InputSystem_Actions.inputactions` in the Editor **(you)**
 
 ## 2. Simulation core (`TGLabTest.Simulation`)
 
@@ -69,7 +69,7 @@ Acceptance checks are in `GAME-DESIGN.md` → *Milestones*.
 - [x] Rightward drift from tail rotor translating tendency — derived lateral rigging offset
 - [x] Milestone 2 — yaw (Y rotation unfrozen)
 - [x] Milestone 3 — full six degrees of freedom. Fixes along the way: anchored skid friction, lateral rigging, roll inertia 6,500 kg·m²
-- [~] Milestone 4 — fuselage drag and skids. Take-off and landing pass; top speed untested
+- [x] Milestone 4 — fuselage drag and skids. Take-off and landing pass; top-speed check descoped. Added along the way: flapback
 
 ## 8. Presentation and tuning
 
@@ -79,5 +79,5 @@ Acceptance checks are in `GAME-DESIGN.md` → *Milestones*.
 
 ## 9. Close-out
 
-- [ ] Documentation sweep: `GAME-DESIGN.md` statuses, `ARCHITECTURE.md`, `PROJECT-NOTES.md`
+- [~] Documentation sweep: `GAME-DESIGN.md` statuses, `ARCHITECTURE.md`, `PROJECT-NOTES.md` — swept after milestone 4; repeat once step 8 is done
 - [ ] Delete this file

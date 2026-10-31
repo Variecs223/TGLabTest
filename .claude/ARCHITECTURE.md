@@ -66,7 +66,7 @@ reference that would break that rule doesn't compile.
 | `HelicopterParameters` | Plain C# | The runtime values the models use, built from a config: effective coefficients split per part (`RotorParameters`, `DrivetrainParameters`, `FuselageParameters`, `SkidGearParameters`), geometry, and the mapping from control positions to blade pitch. |
 | `ControlPositions` | Struct | The four control positions: collective, cyclic lateral, cyclic longitudinal, pedals. The only input the simulation accepts. |
 | `RotorSample`, `SkidContactSample` | Structs | The sampled body state a model needs for one step: shaft axes and hub velocity; contact position and velocity. |
-| `RotorModel` | Plain C# | Thrust, drag torque and disk tilt for one rotor. Two instances: main and tail. |
+| `RotorModel` | Plain C# | Thrust, drag torque and disk tilt (cyclic, rigging, flapback, lag) for one rotor. Two instances: main and tail. |
 | `Drivetrain` | Plain C# | Engine torque, governor and rotor speed. Takes the rotors' drag torques, integrates rotor speed. |
 | `FuselageAero` | Plain C# | Fuselage drag at the centre of pressure. |
 | `SkidGear` | Plain C# | Spring-damper contacts with friction at the skid points. Queries the ground through `IGroundProbe`. |
@@ -125,19 +125,15 @@ directly.
 
 - **Direct, read-only interfaces** for high-frequency data: `IFlightControls` into the simulation,
   `IHelicopterState` out of it.
-- **SignalBus** for rare, loosely coupled events only (engine started or stopped, touchdown,
-  lift-off). None exist yet; none are added until a consumer needs one.
-- **UniTask** for asynchronous flow when it arrives — boot, scene loading, timed sequences such as
-  an engine start-up spool. The simulation itself is synchronous and never awaits.
-- **State machine** for the engine once engine on/off is built (off → starting → running →
-  stopping). Nothing needs one yet.
+- **SignalBus** for rare, loosely coupled events only (touchdown, lift-off). None exist yet; none
+  are added until a consumer needs one.
+- **UniTask** for asynchronous flow when it arrives — boot, scene loading, timed sequences. The
+  simulation itself is synchronous and never awaits.
 
 ## Extension points
 
 | Change | Where it lands |
 |---|---|
 | Joystick or gamepad | A new `IFlightControls` implementation with absolute positions. |
-| Force trim | `FlightControls`; the simulation is unaffected. |
 | Detailed aerodynamics | `RotorModel` internals and its config section. |
-| Engine on/off | `Drivetrain` input, an engine state machine, signals for start and stop. |
 | Simulation tests | EditMode tests against `TGLabTest.Simulation`; no scene needed. |

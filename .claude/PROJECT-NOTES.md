@@ -5,18 +5,18 @@ Implementation specifics for the helicopter simulator. Structure and component r
 
 ## Current state
 
-The simulation core, config inspector, controls, gameplay wiring, a placeholder helicopter prefab
-and a test scene with a terrain collider are built. Milestone 1 (vertical only, rotations frozen)
-passes: mid collective hovers, full collective climbs steadily at ~9 m/s with rotor speed held, and
-a fast pull droops and recovers RPM. Implementation progress is tracked step by step in
-`IMPLEMENTATION-PLAN.md`.
+The full flight model flies in six degrees of freedom: simulation core, config inspector, controls,
+gameplay wiring, telemetry overlay, a placeholder helicopter prefab and a test scene with a terrain
+collider. Milestones 1–4 pass: hover at mid collective, steady ~9 m/s climb with rotor speed held,
+RPM droop and recovery, collective-to-yaw coupling, a hover that needs constant small corrections,
+take-off and landing on the skids. At low speed with careful taps the helicopter is controllable.
+High-speed flight was descoped from testing — too hard to control on a keyboard. Not built yet:
+`RotorVisual`, camera polish, the real location. Implementation progress is tracked step by step
+in `IMPLEMENTATION-PLAN.md`.
 
-**Observed, not yet addressed:** the helicopter drifts steadily to the right. This is the tail
-rotor's translating tendency (see *Tail rotor*): ~2.4 kN of sideways tail thrust, resisted only by
-fuselage side drag, settles at roughly 20 m/s with rotations frozen. A real pilot cancels it with a
-held bit of left cyclic (~3° of disk tilt, about half the lateral range). With spring-return
-keyboard cyclic that can't be held steadily — to be revisited in milestone 3 (force trim, or a
-lateral mast tilt in the config, as some real helicopters are rigged).
+**Config asset deviates from the derivation:** the UH-1 asset has the `kvt` override enabled at
+0.924 (40 % of the derived 2.309), which felt better — less yaw upset from sideways motion. Not yet
+folded into the derivation; see *Derivation* → yaw damping split.
 
 ## Project setup
 
@@ -91,15 +91,40 @@ Q  = Ω²·q0 + |T|·(vi + Vup)/Ω                    // Vup taken along the thr
 - Descent lowers the power demand smoothly; `vi + Vup` never goes negative, so the air never drives
   the rotor (no autorotation in this scope; no vortex ring state).
 
-**Disk tilt from cyclic, with lag:**
+**Disk tilt from cyclic, rigging and flapback, with lag:**
 ```
-nTarget = normalize(shaftUp + shaftFwd·(cy·maxTiltLon) + shaftRight·(cx·maxTiltLat))
+vPlane  = ProjectOnPlane(vHub, shaftUp)                       // hub velocity across the disk
+nTarget = normalize(shaftUp
+                    + shaftFwd   · (cy·maxTiltLon)
+                    + shaftRight · (cx·maxTiltLat + rig)
+                    − Kfb · vPlane)
 n       = Slerp(n, nTarget, 1 − exp(−dt/τ))
 ```
 
 `n` is stored **in world space**. When the fuselage rotates, the disk briefly lags behind and tilts
 the thrust against the motion — the pitch and roll damping a real rotor provides. Without it the
 helicopter oscillates uncontrollably.
+
+- **Cyclic commands rotation rate, not attitude.** A tilt of the disk relative to the mast moves the
+  thrust line off the centre of mass, so the fuselage rotates until the disk lines up with the mast
+  again. Holding W keeps pitching the nose down (up to ~80°/s) and flips the helicopter; releasing
+  it leaves the attitude where it is. That is how a teetering rotor behaves.
+- **`rig` — lateral rigging.** A constant disk tilt with the cyclic centred, derived so that a hover
+  needs no lateral cyclic (see *Derivation*). It cancels the roll moment of the tail rotor thrust,
+  which acts above the CG. The sideways force of the tail rotor is then cancelled by the whole
+  aircraft hanging rolled ~1.5° (left skid low for a CCW rotor), as real UH-1s do. Real helicopters
+  get the same effect from cyclic rigging or mast tilt. Exact only in a hover.
+- **`Kfb` — flapback** (blowback), rad of disk tilt per m/s. A rotor moving through the air flaps
+  away from the airflow: the advancing blade gets more lift than the retreating one. Forward speed
+  tilts the disk back and pitches the nose up; a sideways slide rolls the aircraft against the
+  slide. This is the speed stability that lets a moving helicopter slow and level itself.
+  Climb and descent are excluded (`vPlane` lies in the disk plane); they are handled by `kv`.
+- **Phugoid.** Flapback turns speed into nose-up pitch, pitch into deceleration, deceleration into
+  nose-down pitch: a slow oscillation, period `≈ 2π / √(Kfb·W·h·g / D)` ≈ 20 s, with `h` the hub
+  height above the CG and `D = W·h·τ` the pitch damping from disk lag. Roughly neutral in this
+  model — neither dies out nor grows much. The nose overshoots level while the aircraft is still
+  moving; the pilot damps it by correcting ahead of the swing, as with a real hover.
+- Lateral flapping in forward flight (from blade coning) is not modelled.
 
 **Hub moment** `M = Kβ·Cross(shaftUp, n)` — 0 for a two-blade teetering rotor like the UH-1. Kept
 as a config value for articulated or hingeless rotors.
@@ -127,7 +152,12 @@ tailAxis = −spinSign·transform.right
   tail disk would tilt the tail thrust fore or aft while yawing (~6° at 1 rad/s), adding a false
   longitudinal force. In code it is the same `RotorModel` with zero tilt range and zero lag.
 - Tail thrust acts above or below the CG, giving a small roll moment and the translating tendency.
-  Both are real; keep them.
+  Both are real; keep them. The hover case is cancelled by the main rotor's lateral rigging (see
+  *Main rotor*); off-hover, the pilot corrects with cyclic.
+- **Sideways motion costs tail thrust.** `Vaxial` includes the whole aircraft's lateral velocity,
+  not only yaw: drifting in the direction the tail rotor pushes loses `kvt·Ωt` of thrust per m/s
+  (~400 N with the derived `kvt`). With `kvt` derived from the max yaw rate, the tail rotor carries
+  all of the yaw damping, which overstates this ~3× against a real tail rotor.
 
 ### Engine, governor and rotor speed
 
@@ -152,7 +182,7 @@ Itotal = Imain + gt²·Itail
   speed rises. `Ωmin` stops it dividing by zero at standstill.
 - `rate` — how fast engine torque can change (spool lag).
 - `gt·Qt` — tail rotor drag referred to the main shaft; heavy pedal steals engine power.
-- Engine off: `Qcmd = 0`, the rotor spins down and thrust fades. No autorotation in this scope.
+- The engine always runs; engine on/off is out of scope.
 
 ### Torque reaction
 
@@ -167,8 +197,6 @@ drag directly. The handoff used `Q` alone; the shaft torque replaces it.
 - In steady flight `Ω̇ = 0`, so `Qshaft = Q` and all tuning below holds unchanged.
 - A collective pull first slows the rotor; the yaw kick builds as the engine spools up instead of
   arriving instantly.
-- With the engine off the shaft carries almost no torque, so the reaction disappears and the tail
-  rotor swings the nose left (CCW rotor), as in a real engine failure.
 
 ### Fuselage drag
 
@@ -278,9 +306,12 @@ deviation stays visible.
 | 7 | Engine power `Pmax ≈ 1.3–1.5 × Phover` | `Qmax_nom = Pmax / Ωnom` |
 | 8 | Spool time `tspool` from hover to full torque (0.5–2 s) | `rate = (Qmax_nom − Qh) / tspool` |
 | 9 | Governor droop `δΩ` (fraction of `Ωnom`) at which it commands full torque | `Kgov = Qmax_nom / (δΩ·Ωnom)` |
+| 10 | Hover with centred lateral cyclic: main rotor tilt cancels the tail thrust's roll moment | `rig = spinSign·Tt_hover·tailHub.y / (m·g·mainHub.y)` (offsets relative to the CG) |
 
 Rows 1–5 and 7 come from the original plan. Rows 6, 8 and 9 are proposed here to keep every
-coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
+coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`. Row 10 was added in
+milestone 3, when the unopposed translating tendency made the hover unflyable on a keyboard.
+Flapback `Kfb` is a plain config value, not derived.
 
 `Phover` is the **main rotor's** hover power; the drivetrain total at hover adds the tail share and
 friction (~791 kW with the defaults). Each rotor's hover thrust `Th` is computed from its effective
@@ -288,7 +319,7 @@ coefficients at neutral pitch and nominal speed, so a `kT` override keeps `vh` m
 this rotor's hover thrust".
 
 Derived values with the defaults: `kT ≈ 279.9`, `kv ≈ 124.3`, `q0 ≈ 5.376`, `vh ≈ 11.6 m/s`,
-`kTt ≈ 0.5738`, `kvt ≈ 2.309`, `q0t ≈ 0.004863`, `vht ≈ 24.5 m/s`, `rate ≈ 8842`, `Kgov ≈ 28956`.
+`rig ≈ −0.0316 rad` (1.81° left), `kTt ≈ 0.5738`, `kvt ≈ 2.309`, `q0t ≈ 0.004863`, `vht ≈ 24.5 m/s`, `rate ≈ 8842`, `Kgov ≈ 28956`.
 Hover: main torque ≈ 20.63 kN·m, tail thrust ≈ 2.399 kN, drivetrain power ≈ 791 kW, governor
 target ≈ 331.7 rpm.
 
@@ -297,12 +328,20 @@ sustained 10 m/s climb needs ~1,045 kW against the 1,000 kW `Pmax`, so the rotor
 the climb settles a little lower (~9 m/s observed). Raise `Pmax` to ~1,060 kW if the full target
 matters.
 
+**Yaw damping split (proposed, not built).** Row 6 puts all yaw damping on the tail rotor, which
+makes it overly sensitive to sideways drift (see *Tail rotor*). A real aircraft gets much of its
+yaw damping from the tail boom and fin, which react to rotation but not to drift. Proposal: a
+config share `sy` (~40 %) for the tail rotor; `kvt` from row 6 scaled by `sy`, and the remainder
+`(1 − sy)·kvt·Ωt_nom·Larm²` added as fuselage yaw damping (`AngularDamping.y`), keeping the total —
+and so the max yaw rate and yaw response time — unchanged. With the defaults: `kvt ≈ 0.924`, yaw
+damping ≈ 17,700 N·m·s/rad. Currently approximated on the asset by the `kvt` override alone.
+
 ### Starting values (UH-1H-like, approximate)
 
 | Parameter | Value |
 |---|---|
 | mass | 4,300 kg |
-| inertia (Unity axes: X pitch, Y yaw, Z roll) | ≈ (24,700, 21,000, 3,750) kg·m² |
+| inertia (Unity axes: X pitch, Y yaw, Z roll) | ≈ (24,700, 21,000, 6,500) kg·m² — roll raised from 3,750 in milestone 3 to match published UH-1H estimates; calmer, less twitchy roll |
 | main hub above CG | ~1.8 m |
 | `Larm` (tail hub behind CG) | ~8.6 m |
 | `Ωnom` | 33.9 rad/s (324 rpm) |
@@ -312,6 +351,7 @@ matters.
 | `θtNeutral` | 8° — sets how much pedal authority lies each side of hover |
 | `maxTiltLon / maxTiltLat` | 0.14 / 0.10 rad (8° / 6°) |
 | `τ` disk lag | 0.1 s (0.08–0.12) |
+| `Kfb` flapback | 0.6° per 10 m/s (≈ 0.001 rad per m/s); lower gives a slower, gentler phugoid |
 | `Phover` / `Pmax` | ~700 kW / ~1,000 kW |
 | `Imain` | ~6,000 kg·m² |
 | `Vclimb` | ~10 m/s |
@@ -332,6 +372,7 @@ matters.
 | skid contact offsets | (±1.3, −1.4, ±1.5) |
 | skid suspension length | 0.3 m |
 | skid friction `μ` / stiffness / damping | 0.6 / 2e5 N/m / 2e4 N·s/m |
+| `kvt` override on the UH-1 asset | 0.924 (derived 2.309) — see *Current state* |
 | `ρ` air density | 1.225 kg/m³ |
 
 ## Controls
