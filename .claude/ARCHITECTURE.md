@@ -26,7 +26,7 @@ Nothing is implemented yet; this is the agreed structure.
                 └───────────────┬───────────────────────────────────────┘
                                 │ registers itself
                                 ▼
-                     ActiveHelicopter (scene) ──► HelicopterCamera
+                     IActiveHelicopter (scene) ──► HelicopterCamera
                                               └─► TelemetryOverlay
 ```
 
@@ -48,8 +48,9 @@ upstream.
 | `TGLabTest.Gameplay` | `Assets/TGLabTest/Gameplay/` | `TGLabTest.Gameplay` | Simulation, Zenject, Input System, UniTask | Installers, controls, the simulation orchestrator, presentation. |
 | `TGLabTest.EditorTools` | `Assets/TGLabTest/EditorTools/` | `TGLabTest.EditorTools` | Simulation, `UnityEditor` | Custom inspectors. Editor-only. |
 
-Namespaces follow folders below the root (`TGLabTest.Gameplay.Controls`,
-`TGLabTest.Gameplay.Presentation`, …).
+Namespaces follow folders below the root. `TGLabTest.Gameplay` holds the scene-level pieces
+(`FlightSceneInstaller`, `ActiveHelicopter`); `.Controls` the input; `.Helicopter` everything bound
+in the helicopter's context; `.Presentation` camera, overlay and visuals.
 
 The assembly split is what keeps the simulation core free of scene, DI and input dependencies — a
 reference that would break that rule doesn't compile.
@@ -81,14 +82,14 @@ replaces `RotorModel`'s internals and nothing else.
 
 | Component | Kind | Context | Purpose |
 |---|---|---|---|
-| `FlightSceneInstaller` | MonoInstaller | SceneContext | Binds the scene-level services: controls, `ActiveHelicopter`. |
-| `HelicopterInstaller` | MonoInstaller | Helicopter GameObjectContext | Binds the aircraft: config, parameters, models, state, ground probe, orchestrator, scene references from `HelicopterRig`. |
+| `FlightSceneInstaller` | MonoInstaller | SceneContext | Binds the scene-level services: the `FlightInput` wrapper, controls, `ActiveHelicopter`. |
+| `HelicopterInstaller` | MonoInstaller | Helicopter GameObjectContext | Serialized config and Rigidbody. Binds the aircraft: parameters, Rigidbody, state, ground probe, orchestrator, registration. |
 | `IFlightControls` / `FlightControls` | Interface / plain C# | SceneContext | Reads the Input System `Flight` action map each frame, applies ramp and hold behaviour, exposes `ControlPositions`. Future joystick, gamepad or scripted sources are further implementations. |
-| `HelicopterRig` | MonoBehaviour | Helicopter prefab | Holds the prefab's references: Rigidbody, main and tail hub transforms, centre of pressure, skid points. No logic. |
-| `HelicopterSimulation` | Plain C#, `IFixedTickable` | Helicopter | The orchestrator. Each fixed step: reads controls, samples the body, steps the models, applies forces to the Rigidbody, writes `HelicopterState`. |
-| `RaycastGroundProbe` | Plain C# | Helicopter | `IGroundProbe` over `Physics.Raycast`. |
-| `ActiveHelicopter` | Plain C# | SceneContext | Registry of the helicopter currently being flown. The helicopter registers on initialize and unregisters on dispose. Lets scene-level objects reach an aircraft that lives in a child context. |
-| `RotorVisual` | MonoBehaviour | Helicopter prefab | Spins rotor meshes from rotor speed, tilts the main rotor to the disk normal, swaps to a blur disk at high speed. |
+| `HelicopterSimulation` | Plain C#, `IFixedTickable` | Helicopter | The orchestrator. Owns the models — they are parts of the simulation, not services, so it constructs them from `HelicopterParameters` rather than receiving them from DI. Each fixed step: reads controls, samples the body, steps the models, applies forces to the Rigidbody, writes `HelicopterState`. Also applies the Rigidbody settings on initialize. |
+| `RaycastGroundProbe` | Plain C# | Helicopter | `IGroundProbe` over `Physics.RaycastNonAlloc`, ignoring the helicopter's own colliders. |
+| `IActiveHelicopter` / `ActiveHelicopter` | Interface / plain C# | SceneContext | Registry of the helicopter currently being flown: its transform and `IHelicopterState`. Readers use the interface; only registration uses the class. Lets scene-level objects reach an aircraft that lives in a child context. |
+| `HelicopterRegistration` | Plain C# | Helicopter | Registers the aircraft with `ActiveHelicopter` on initialize, unregisters on dispose. |
+| `RotorVisual` | MonoBehaviour | Helicopter prefab | Spins rotor meshes from rotor speed, tilts the main rotor to the disk normal, swaps to a blur disk at high speed. Its transforms only place visuals — physics geometry comes from the config. |
 | `HelicopterCamera` | MonoBehaviour | Scene | Third-person follow camera on the active helicopter. |
 | `TelemetryOverlay` | MonoBehaviour | Scene | Developer-only IMGUI readout of the active helicopter's `IHelicopterState`. |
 

@@ -41,23 +41,24 @@ read at the start of the next prompt, and errors are fixed before moving on.
 
 - [x] `FlightInput.inputactions` — `Flight` map, `Keyboard` scheme, generated `FlightInput` class
 - [x] `IFlightControls`, `FlightControls` — ramps, hold, rates from `PROJECT-NOTES.md`
-- [ ] Compile confirmed in Unity **(you)**
+- [x] Compile confirmed in Unity **(you)**
 
 ## 5. Gameplay wiring (`TGLabTest.Gameplay`)
 
-- [ ] `HelicopterRig` — prefab references
-- [ ] `RaycastGroundProbe`
-- [ ] `HelicopterSimulation` — fixed-step order from `PROJECT-NOTES.md`, shaft-torque reaction
-- [ ] `ActiveHelicopter` — registration on initialize/dispose
-- [ ] `HelicopterInstaller` (GameObjectContext), `FlightSceneInstaller` (SceneContext)
-- [ ] Verify `IFixedTickable` inside the GameObjectContext is driven each fixed step
-- [ ] `HelicopterCamera` — basic follow
-- [ ] `TelemetryOverlay` — minimal IMGUI readout
+- [x] ~~`HelicopterRig`~~ — dropped: forces use config offsets, so the installer's serialized Rigidbody is the only prefab reference needed
+- [x] `RaycastGroundProbe`
+- [x] `HelicopterSimulation` — fixed-step order from `PROJECT-NOTES.md`, shaft-torque reaction, Rigidbody setup
+- [x] `IActiveHelicopter` / `ActiveHelicopter`, `HelicopterRegistration`
+- [x] `HelicopterInstaller` (GameObjectContext), `FlightSceneInstaller` (SceneContext)
+- [x] Verify `IFixedTickable` inside the GameObjectContext is driven each fixed step — yes, via `DefaultGameObjectKernel`
+- [x] `HelicopterCamera` — basic follow
+- [x] `TelemetryOverlay` — minimal IMGUI readout
+- [ ] Compile confirmed in Unity **(you)**
 
 ## 6. Scene and prefab **(you, to spec)**
 
-- [ ] Spec handed over: prefab hierarchy, components, transform offsets from the config
-- [ ] Helicopter prefab — GameObjectContext + `HelicopterInstaller`, Rigidbody, `HelicopterRig` with main hub, tail hub, centre of pressure, four skid points; placeholder mesh; hull collider
+- [x] Spec handed over
+- [ ] Helicopter prefab — GameObjectContext + `HelicopterInstaller` (config, Rigidbody), Rigidbody, placeholder mesh, hull collider
 - [ ] Scene — SceneContext + `FlightSceneInstaller`, camera with `HelicopterCamera`, `TelemetryOverlay`
 
 ## 7. Flight milestones

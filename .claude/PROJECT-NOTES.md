@@ -5,8 +5,8 @@ Implementation specifics for the helicopter simulator. Structure and component r
 
 ## Current state
 
-The simulation core (`TGLabTest.Simulation`) is written and compiles; nothing is wired into a scene
-yet. Implementation progress is tracked step by step in `IMPLEMENTATION-PLAN.md`.
+The simulation core, config inspector, controls and gameplay wiring are written. The scene and
+helicopter prefab are not built yet, so nothing has flown. Implementation progress is tracked step by step in `IMPLEMENTATION-PLAN.md`.
 
 ## Project setup
 
@@ -206,7 +206,10 @@ manual value; `HelicopterParameters` packs the result per part (`RotorParameters
   their name. The config's public getters return SI and radians; conversion happens only there.
 - **Geometry** lives in the config as offsets **relative to the centre of mass**: main hub, tail
   hub, centre of pressure, skid contacts. The centre of mass itself is relative to the prefab root.
-  `Larm = −TailHubOffset.z`.
+  `Larm = −TailHubOffset.z`. **The config is the only source of physics geometry** — forces are
+  applied at these offsets, never at prefab transforms, so the derivation and the simulation can't
+  disagree. Prefab transforms only place visuals; if the model and the config disagree, correct
+  the config.
 - **Blade pitch from controls** is `HelicopterParameters.MainRotorPitch(collective)` and
   `TailRotorPitch(pedals)`; the pedal sign rule lives there.
 - **Inspector** (`HelicopterConfigEditor`): the config fields, then a *Coefficients* table — derived
@@ -305,7 +308,10 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 
 ## Unity setup
 
-**Rigidbody:**
+**Rigidbody** — `HelicopterSimulation.Initialize` applies all of these from the config, overriding
+whatever the prefab's Rigidbody says; only `constraints` are left to the prefab (used to freeze
+rotations for milestones 1–2):
+- `mass` from the config.
 - `automaticCenterOfMass = false`, `automaticInertiaTensor = false`; set `centerOfMass`,
   `inertiaTensor` and `inertiaTensorRotation` from the config. Collider-derived values are badly
   wrong for helicopters.
@@ -316,6 +322,10 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 **Hull collider.** A simple collider on the prefab from milestone 1, so the helicopter can sit on
 the ground before the skids exist. Once the skids work, their springs hold it above the ground and
 the collider is only a crash hull.
+
+**Camera.** `HelicopterCamera` sits behind and above the helicopter along its **heading only** —
+pitch and roll are not followed, so attitude stays readable against the horizon. The heading
+follows with an exponential lag. Distance, height, look height and lag are serialized fields.
 
 **Rotors** are not Rigidbodies; they exist only as math. Meshes are spun from `Ω` and tilted to
 `n`. At high RPM a blur-disk mesh replaces the blades, since HDRP motion blur handles rotors poorly.
@@ -366,9 +376,16 @@ negative drives the rotor) without special-case code.
 - **The scene can't see the helicopter's bindings.** A GameObjectContext inherits from the
   SceneContext, not the other way round. Scene-level objects reach the aircraft through
   `ActiveHelicopter`.
-- **Fixed ticks inside a GameObjectContext** — confirm at implementation that `IFixedTickable`
-  bindings in the helicopter's context are driven each fixed step, and in which order relative to
-  other scripts.
+- **Fixed ticks inside a GameObjectContext** are driven by the context's own kernel: with the
+  *Kernel* field empty, `GameObjectContext` adds a `DefaultGameObjectKernel` component whose
+  `FixedUpdate` runs the context's `IFixedTickable`s. Order relative to other scripts is only
+  controllable by assigning a custom `MonoKernel` subclass with a script execution order.
+- **Sample the physics pose, not the transform.** With interpolation on, `transform` holds the
+  interpolated render pose; `HelicopterSimulation` reads `Rigidbody.rotation` and
+  `worldCenterOfMass` instead. Presentation reads the transform, which is what it should show.
+- **The ground probe must skip the helicopter's own colliders** — the ray starts above the skid,
+  possibly inside the hull. `RaycastGroundProbe` drops hits whose `rigidbody` is the helicopter's,
+  so no layer setup is needed.
 - **`n` must stay in world space.** Storing it relative to the shaft removes the disk lag that
   damps pitch and roll.
 - **Overrides silently break targets** — see *Configuration and coefficients*.
