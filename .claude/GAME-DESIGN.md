@@ -133,7 +133,10 @@ Each stage is accepted when its checks hold.
 - **Blade pitch** — angle of a blade relative to the plane it spins in.
 - **Rotor disk** — the plane the blade tips sweep. Thrust acts perpendicular to it.
 - **Swashplate** — mechanism turning collective and cyclic inputs into blade pitch.
-- **Flapping** — blades moving up and down on their hinges; this is what tilts the disk.
+- **Flapping** — blades moving up and down on their hinges; this is what tilts the disk. The mast
+  itself stays fixed to the fuselage.
+- **Teetering / articulated rotor** — a two-blade rotor rocking on the mast as one piece, which
+  transmits no hub moment / a multi-blade rotor with hinges per blade, which does.
 - **Torque reaction** — the fuselage being turned opposite to the rotor's rotation.
 - **Governor** — engine controller holding rotor speed.
 - **RPM droop** — the rotor slowing when the load exceeds what the engine can deliver at that moment.
