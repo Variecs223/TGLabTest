@@ -88,6 +88,7 @@ namespace TGLabTest.Simulation
                 damping: config.SkidDamping,
                 suspensionLength: config.SkidSuspensionLength,
                 frictionCoefficient: config.SkidFrictionCoefficient,
+                frictionStiffness: config.SkidFrictionStiffness,
                 frictionDamping: config.SkidFrictionDamping);
         }
 

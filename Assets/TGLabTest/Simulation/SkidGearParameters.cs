@@ -6,6 +6,7 @@ namespace TGLabTest.Simulation
         public float Damping { get; }
         public float SuspensionLength { get; }
         public float FrictionCoefficient { get; }
+        public float FrictionStiffness { get; }
         public float FrictionDamping { get; }
 
         public SkidGearParameters(
@@ -13,12 +14,14 @@ namespace TGLabTest.Simulation
             float damping,
             float suspensionLength,
             float frictionCoefficient,
+            float frictionStiffness,
             float frictionDamping)
         {
             Stiffness = stiffness;
             Damping = damping;
             SuspensionLength = suspensionLength;
             FrictionCoefficient = frictionCoefficient;
+            FrictionStiffness = frictionStiffness;
             FrictionDamping = frictionDamping;
         }
     }

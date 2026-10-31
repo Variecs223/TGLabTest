@@ -193,11 +193,26 @@ WheelColliders** for skids.
   far down. `compression = SuspensionLength − hitDistance`: zero when the ground is exactly at the
   contact point, positive as the skid sinks in. Contact points therefore sit at the skid's unloaded
   bottom; at rest the skids sink ~5 cm.
-- `compressionRate = −Dot(contactVelocity, hitNormal)` — from velocity, so the gear keeps no state
-  between steps.
-- Friction is viscous with a Coulomb cap: `−slipVelocity·frictionDamping`, clamped to
-  `μ·normalForce`. Isotropic — sliding along the skids is as hard as sideways. On a slope it creeps
-  slowly rather than holding perfectly still.
+- `compressionRate = −Dot(contactVelocity, hitNormal)` — from velocity, so the normal force needs
+  no state between steps.
+- **Friction is anchored** (stick-slip), so the skids can hold the aircraft perfectly still:
+  ```
+  anchor   = hit point at touchdown, per contact, world space
+  d        = ProjectOnPlane(hitPoint − anchor, normal)          // how far the skid has been pushed
+  F        = −kf·d − cf·slipVelocity                            // stick: spring back to the anchor + damping
+  if |F| > μ·N:  F = μ·N·F/|F|,  anchor = hitPoint + F/kf      // slip: cap the force, drag the anchor along
+  ```
+  `kf` is the friction stiffness (2e5 N/m per contact), `cf` the friction damping (2e4 N·s/m). The
+  anchor is cleared when the contact leaves the ground. Isotropic — sliding along the skids is as
+  hard as sideways.
+- **Why anchored.** Purely viscous friction (`−cf·slipVelocity`, capped) only resists motion that is
+  already happening, so any steady load makes the skids creep. With the rotor turning at flat pitch
+  the tail rotor leaves ~14 kN·m of nose-left yaw (tail thrust is set to balance hover torque, the
+  main rotor makes only profile torque at 0° pitch), which crept the helicopter round at ~2.6°/s on
+  the ground. Anchored, the same load costs ~9 mm of give per contact.
+- As collective rises, the load on the skids — and so the friction limit — falls while the yaw
+  imbalance shrinks toward zero at hover collective; around lift-off the nose becomes free and needs
+  pedal, as in a real helicopter.
 - The skids replace collision response with the ground only. Movement is still Unity's Rigidbody,
   the ground is found with `Physics.Raycast`, and the hull collider handles crashes.
 
@@ -316,7 +331,7 @@ matters.
 | main hub / tail hub / centre of pressure offsets | (0, 1.8, 0) / (0, 1, −8.6) / (0, 0, −0.5) |
 | skid contact offsets | (±1.3, −1.4, ±1.5) |
 | skid suspension length | 0.3 m |
-| skid friction `μ` / damping | 0.6 / 2e4 N·s/m |
+| skid friction `μ` / stiffness / damping | 0.6 / 2e5 N/m / 2e4 N·s/m |
 | `ρ` air density | 1.225 kg/m³ |
 
 ## Controls

@@ -66,6 +66,7 @@ namespace TGLabTest.Simulation
         [SerializeField, Min(0f)] private float _skidDamping = 1.8e4f;
         [SerializeField, Min(0.01f)] private float _skidSuspensionLength = 0.3f;
         [SerializeField, Min(0f)] private float _skidFrictionCoefficient = 0.6f;
+        [SerializeField, Min(1f)] private float _skidFrictionStiffness = 2e5f;
         [SerializeField, Min(0f)] private float _skidFrictionDamping = 2e4f;
 
         [Header("Coefficient overrides")]
@@ -124,6 +125,7 @@ namespace TGLabTest.Simulation
         public float SkidDamping => _skidDamping;
         public float SkidSuspensionLength => _skidSuspensionLength;
         public float SkidFrictionCoefficient => _skidFrictionCoefficient;
+        public float SkidFrictionStiffness => _skidFrictionStiffness;
         public float SkidFrictionDamping => _skidFrictionDamping;
 
         public CoefficientOverride ThrustCoefficientOverride => _thrustCoefficient;
