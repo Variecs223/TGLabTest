@@ -48,6 +48,7 @@ namespace TGLabTest.Simulation
                 maxTiltLongitudinal: config.MaxTiltLongitudinal,
                 maxTiltLateral: config.MaxTiltLateral,
                 lateralRigging: coefficients.LateralRigging,
+                flapback: config.Flapback,
                 diskLag: config.DiskLag,
                 hubStiffness: config.HubStiffness);
 
@@ -63,6 +64,7 @@ namespace TGLabTest.Simulation
                 maxTiltLongitudinal: 0f,
                 maxTiltLateral: 0f,
                 lateralRigging: 0f,
+                flapback: 0f,
                 diskLag: 0f,
                 hubStiffness: 0f);
 

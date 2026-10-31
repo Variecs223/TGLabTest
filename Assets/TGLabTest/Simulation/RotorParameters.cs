@@ -15,6 +15,7 @@ namespace TGLabTest.Simulation
         public float MaxTiltLongitudinal { get; }
         public float MaxTiltLateral { get; }
         public float LateralRigging { get; }
+        public float Flapback { get; }
         public float DiskLag { get; }
         public float HubStiffness { get; }
 
@@ -30,6 +31,7 @@ namespace TGLabTest.Simulation
             float maxTiltLongitudinal,
             float maxTiltLateral,
             float lateralRigging,
+            float flapback,
             float diskLag,
             float hubStiffness)
         {
@@ -43,6 +45,7 @@ namespace TGLabTest.Simulation
             MaxTiltLongitudinal = maxTiltLongitudinal;
             MaxTiltLateral = maxTiltLateral;
             LateralRigging = lateralRigging;
+            Flapback = flapback;
             DiskLag = diskLag;
             HubStiffness = hubStiffness;
             HoverThrust = Mathf.Abs(Thrust(nominalRotorSpeed, neutralPitch, 0f));

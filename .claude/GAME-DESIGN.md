@@ -47,15 +47,15 @@ The model simulates these parts:
 
 | Part | Status | What it simulates |
 |---|---|---|
-| Main rotor | In progress — vertical behaviour verified (milestone 1); cyclic and disk lag untested | Thrust and drag torque from blade pitch and rotor speed. Climbing reduces thrust and descending increases it, which damps vertical motion and caps the climb rate. The rotor disk tilts with cyclic, and the tilt lags slightly behind the fuselage, which damps pitch and roll. |
-| Tail rotor | Planned | The same model, smaller, geared to the main rotor. Its thrust opposes the main rotor's torque reaction. Its response to the fuselage swinging provides yaw damping. |
+| Main rotor | Complete | Thrust and drag torque from blade pitch and rotor speed. Climbing reduces thrust and descending increases it, which damps vertical motion and caps the climb rate. The rotor disk tilts with cyclic, and the tilt lags slightly behind the fuselage, which damps pitch and roll. |
+| Tail rotor | Complete | The same model, smaller, geared to the main rotor. Its thrust opposes the main rotor's torque reaction. Its response to the fuselage swinging provides yaw damping. |
 | Engine and governor | Complete | Delivers torque to the rotors to hold a target rotor speed. Its output is limited in both maximum power and how fast it can change, so heavy loads droop rotor RPM until it catches up. Fuel is infinite. |
 | Fuselage | Planned | Air drag on all three axes, acting slightly behind the centre of mass, so the helicopter limits its own top speed and tends to weathervane into its direction of travel. |
 | Landing gear | Planned | Four spring-damped contact points on the skids with ground friction, allowing take-off, landing and sitting on the ground. |
 
 ## Controls
 
-**Planned.** Keyboard only, through the Unity Input System. Keys move control **positions**; the
+**Complete.** Keyboard only, through the Unity Input System. Keys move control **positions**; the
 physics only ever reads those positions, never the keys.
 
 **Keyboard limitation.** A real cyclic and real pedals stay where the pilot leaves them. Keys can't
@@ -72,7 +72,7 @@ device (joystick, gamepad) should drive absolute positions instead.
 
 ### Control coupling
 
-**Planned.** None of this is scripted; all of it must emerge from the model:
+**Complete.** None of this is scripted; all of it must emerge from the model:
 - **Collective → yaw.** Raising collective loads the rotor harder and increases the torque
   reaction, so the nose yaws and needs pedal to hold heading. Lowering it does the opposite.
 - **Pedals → drift and roll.** More tail rotor thrust also pushes the whole helicopter sideways
@@ -81,14 +81,12 @@ device (joystick, gamepad) should drive absolute positions instead.
   too.
 - **Load → rotor speed.** A sharp collective pull or heavy pedal outpaces the engine. Rotor RPM
   droops, thrust drops with it, and both recover as the engine catches up.
-- **Engine off.** The rotor spins down and thrust fades. There is no autorotation in this scope.
 
 ### Optional controls
 
 | Control | Status | Description |
 |---|---|---|
 | Force trim | Planned (later) | A key that stores the current cyclic position as the new neutral, as real helicopters allow. |
-| Engine on/off, governor target | Planned (later) | Switching the engine, or choosing idle vs. flight rotor speed. |
 | Joystick / gamepad | Planned (later) | Analogue axes with absolute positions, replacing the keyboard ramps. |
 
 ## Scope
@@ -100,8 +98,10 @@ The flight model and controls above, the third-person camera, one helicopter and
 ### Deliberately out of scope
 
 - **Fuel** — infinite, mass is constant.
-- **Detailed aerodynamics** — inflow and momentum theory, translational lift, blowback (disk tilting
-  back with airspeed), ground effect, vortex ring state, retreating blade stall.
+- **Engine on/off** — the engine always runs at the governed flight rotor speed.
+- **Detailed aerodynamics** — full inflow modelling (only a vertical momentum-theory estimate of
+  rotor power is used), translational lift, blowback (disk tilting back with airspeed), ground
+  effect, vortex ring state, retreating blade stall.
 - **Autorotation** — it depends on the inflow model above.
 - **Gyroscopic precession** — real swashplates are rigged to cancel it; stick forward simply tilts
   the disk forward.
@@ -120,8 +120,8 @@ Each stage is accepted when its checks hold.
 | # | Stage | Status | Acceptance checks |
 |---|---|---|---|
 | 1 | Vertical only (rotation frozen) | Complete | Mid collective holds a hover. Full collective climbs and settles at a steady maximum climb rate. A fast collective pull shows visible RPM droop, then recovery. |
-| 2 | Yaw | Planned | Collective changes cause yaw that needs pedal to correct. With pedals released at hover collective, the helicopter only drifts slowly in yaw. |
-| 3 | Full six degrees of freedom | Planned | Hover is possible but needs constant small corrections. Forward cyclic drops the nose and the helicopter accelerates forward. |
+| 2 | Yaw | Complete | Collective changes cause yaw that needs pedal to correct. With pedals released at hover collective, the helicopter only drifts slowly in yaw. |
+| 3 | Full six degrees of freedom | Complete | Hover is possible but needs constant small corrections. Forward cyclic drops the nose and the helicopter accelerates forward. |
 | 4 | Fuselage drag and skids | Planned | A stable top speed. Take-off from and landing on the ground. |
 | 5 | Visuals and tuning | Planned | Rotor visuals, third-person camera, simple helicopter model and location; handling tuned against the targets in `PROJECT-NOTES.md`. |
 

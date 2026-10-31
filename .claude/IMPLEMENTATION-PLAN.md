@@ -66,10 +66,10 @@ read at the start of the next prompt, and errors are fixed before moving on.
 Acceptance checks are in `GAME-DESIGN.md` → *Milestones*.
 
 - [x] Milestone 1 — vertical only (all rotations frozen). Fix along the way: rotor torque now from momentum-theory power instead of blade pitch (overpitched at full collective before)
-- [ ] Rightward drift from tail rotor translating tendency — revisit in milestone 3 (see `PROJECT-NOTES.md` → *Current state*)
-- [ ] Milestone 2 — yaw (Y rotation unfrozen)
-- [ ] Milestone 3 — full six degrees of freedom
-- [ ] Milestone 4 — fuselage drag and skids
+- [x] Rightward drift from tail rotor translating tendency — derived lateral rigging offset
+- [x] Milestone 2 — yaw (Y rotation unfrozen)
+- [x] Milestone 3 — full six degrees of freedom. Fixes along the way: anchored skid friction, lateral rigging, roll inertia 6,500 kg·m²
+- [~] Milestone 4 — fuselage drag and skids. Take-off and landing pass; top speed untested
 
 ## 8. Presentation and tuning
 

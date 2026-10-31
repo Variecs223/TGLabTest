@@ -9,6 +9,7 @@ namespace TGLabTest.Simulation
         private const float RpmToRadiansPerSecond = 2f * Mathf.PI / 60f;
         private const float WattsPerKilowatt = 1000f;
         private const float Percent = 0.01f;
+        private const float FlapbackReferenceSpeed = 10f;
 
         [Header("Body")]
         [SerializeField, Min(1f)] private float _mass = 4300f;
@@ -33,6 +34,7 @@ namespace TGLabTest.Simulation
         [SerializeField] private Vector2 _collectivePitchRangeDegrees = new Vector2(0f, 15f);
         [SerializeField, Min(0f)] private float _maxTiltLongitudinalDegrees = 8f;
         [SerializeField, Min(0f)] private float _maxTiltLateralDegrees = 6f;
+        [SerializeField, Min(0f)] private float _flapbackDegreesPer10MetersPerSecond = 0.6f;
         [SerializeField, Min(0f)] private float _diskLagSeconds = 0.1f;
         [SerializeField, Min(0f)] private float _hubStiffness;
         [SerializeField, Min(1f)] private float _mainRotorInertia = 6000f;
@@ -97,6 +99,7 @@ namespace TGLabTest.Simulation
         public float MaxCollectivePitch => _collectivePitchRangeDegrees.y * Mathf.Deg2Rad;
         public float MaxTiltLongitudinal => _maxTiltLongitudinalDegrees * Mathf.Deg2Rad;
         public float MaxTiltLateral => _maxTiltLateralDegrees * Mathf.Deg2Rad;
+        public float Flapback => _flapbackDegreesPer10MetersPerSecond * Mathf.Deg2Rad / FlapbackReferenceSpeed;
         public float DiskLag => _diskLagSeconds;
         public float HubStiffness => _hubStiffness;
         public float MainRotorInertia => _mainRotorInertia;

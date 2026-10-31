@@ -35,9 +35,11 @@ namespace TGLabTest.Simulation
 
         private void UpdateDiskNormal(in RotorSample sample, float cyclicLateral, float cyclicLongitudinal, float deltaTime)
         {
+            Vector3 planeVelocity = Vector3.ProjectOnPlane(sample.HubVelocity, sample.ShaftUp);
             Vector3 target = (sample.ShaftUp
                               + sample.ShaftForward * (cyclicLongitudinal * _parameters.MaxTiltLongitudinal)
-                              + sample.ShaftRight * (cyclicLateral * _parameters.MaxTiltLateral + _parameters.LateralRigging)).normalized;
+                              + sample.ShaftRight * (cyclicLateral * _parameters.MaxTiltLateral + _parameters.LateralRigging)
+                              - planeVelocity * _parameters.Flapback).normalized;
 
             DiskNormal = _parameters.DiskLag > 0f
                 ? Vector3.Slerp(DiskNormal, target, 1f - Mathf.Exp(-deltaTime / _parameters.DiskLag))
