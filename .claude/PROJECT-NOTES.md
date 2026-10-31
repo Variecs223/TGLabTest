@@ -284,17 +284,20 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 | Cyclic | W / S, A / D | Ramps toward ±1 while held, returns to 0 on release | ~3 /s both ways |
 | Pedals | Q / E | Ramps toward ±1 while held, returns to 0 on release | ~2 /s |
 
-- Asset `Assets/TGLabTest/Gameplay/Controls/FlightActions.inputactions`, with **Generate C# Class**
-  on. One `Flight` map: `Cyclic` (2D composite, WASD), `Collective` (1D axis, Space/Ctrl),
-  `Pedals` (1D axis, Q/E). One control scheme, `Keyboard`.
-- The generated wrapper is bound once in the SceneContext; `FlightControls` enables it on
-  initialize and disposes it on dispose. Each wrapper instance owns its own copy of the actions, so
-  Project-wide Actions are irrelevant to it.
-- The template `Assets/InputSystem_Actions.inputactions` is to be **deleted in the Editor** (it is
-  assigned as Project-wide Actions; deleting from disk would leave a dangling reference in
-  `EditorBuildSettings.asset`). Project-wide Actions stays empty; the settings page's prompt to
-  create them can be ignored.
-- Ramps and hold live only in `FlightControls`; the simulation consumes positions.
+- Asset `Assets/TGLabTest/Gameplay/Controls/FlightInput.inputactions`, with **Generate C# Class**
+  on (namespace `TGLabTest.Gameplay.Controls`). It generates `FlightInput.cs` next to the asset —
+  never edit that file. One `Flight` map: `Cyclic` (2D composite, WASD, `mode=2` so diagonals are
+  not normalized and each axis reaches ±1), `Collective` (1D axis, Space +, Ctrl −), `Pedals` (1D
+  axis, Q −, E +). One control scheme, `Keyboard`.
+- **Asset name ≠ `<MapName>Actions`.** The generator names each map's struct `<MapName>Actions`; an
+  asset called `FlightActions` would generate a `FlightActions` struct inside a `FlightActions`
+  class (CS0542). Hence `FlightInput`.
+- The wrapper is bound once in the SceneContext with `BindInterfacesAndSelfTo`, so Zenject disposes
+  it. `FlightControls` enables the `Flight` map on initialize and disables it on dispose. Each
+  wrapper instance owns its own copy of the actions, so Project-wide Actions are irrelevant to it;
+  the template asset has been deleted and Project-wide Actions is empty.
+- Ramps and hold live only in `FlightControls`, ticked in `Update`; the simulation consumes
+  positions. Rates are named constants there (collective 0.45 /s, cyclic 3 /s, pedals 2 /s).
 - **Analogue devices later.** Bindings are per device — a gamepad does nothing until `<Gamepad>`
   bindings are added. Sticks mean absolute positions while keys mean rate commands, and both read
   1.0 at full deflection, so they need separate control schemes (`Keyboard`, `Gamepad`) with
