@@ -27,6 +27,7 @@ Nothing is implemented yet; this is the agreed structure.
                                 │ registers itself
                                 ▼
                      ActiveHelicopter (scene) ──► HelicopterCamera
+                                              └─► TelemetryOverlay
 ```
 
 The project is split into three concerns, each kept away from the others:
@@ -87,6 +88,7 @@ replaces `RotorModel`'s internals and nothing else.
 | `ActiveHelicopter` | Plain C# | SceneContext | Registry of the helicopter currently being flown. The helicopter registers on initialize and unregisters on dispose. Lets scene-level objects reach an aircraft that lives in a child context. |
 | `RotorVisual` | MonoBehaviour | Helicopter prefab | Spins rotor meshes from rotor speed, tilts the main rotor to the disk normal, swaps to a blur disk at high speed. |
 | `HelicopterCamera` | MonoBehaviour | Scene | Third-person follow camera on the active helicopter. |
+| `TelemetryOverlay` | MonoBehaviour | Scene | Developer-only IMGUI readout of the active helicopter's `IHelicopterState`. |
 
 ### EditorTools (`TGLabTest.EditorTools`)
 
@@ -135,5 +137,4 @@ directly.
 | Force trim | `FlightControls`; the simulation is unaffected. |
 | Detailed aerodynamics | `RotorModel` internals and its config section. |
 | Engine on/off | `Drivetrain` input, an engine state machine, signals for start and stop. |
-| Telemetry overlay | Presentation, reading `IHelicopterState`. |
 | Simulation tests | EditMode tests against `TGLabTest.Simulation`; no scene needed. |

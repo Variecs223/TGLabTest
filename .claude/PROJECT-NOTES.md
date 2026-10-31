@@ -5,8 +5,8 @@ Implementation specifics for the helicopter simulator. Structure and component r
 
 ## Current state
 
-No project code yet. The design is agreed (`GAME-DESIGN.md`, `ARCHITECTURE.md`); implementation
-starts with milestone 1.
+No project code yet. The design is agreed (`GAME-DESIGN.md`, `ARCHITECTURE.md`). Implementation
+progress is tracked step by step in `IMPLEMENTATION-PLAN.md`.
 
 ## Project setup
 
@@ -18,7 +18,7 @@ starts with milestone 1.
 | DI | Extenject, from the Mathijs-Bakker fork (git URL in `manifest.json`). |
 | Async | UniTask, embedded in `Assets/Plugins/UniTask/` (not a UPM package). |
 | Scene | `Assets/OutdoorsScene.unity`, from the HDRP template. The real location comes later. |
-| Fixed timestep | Currently 0.02 s. **Must be set to 0.01 s** (100 Hz) before flight testing; 0.005 s if disk lag or skid springs turn out unstable. |
+| Fixed timestep | 0.01 s (100 Hz). Drop to 0.005 s if disk lag or skid springs turn out unstable. |
 
 ## Conventions
 
@@ -121,20 +121,21 @@ Itotal = Imain + gt²·Itail
 - `gt·Qt` — tail rotor drag referred to the main shaft; heavy pedal steals engine power.
 - Engine off: `Qcmd = 0`, the rotor spins down and thrust fades. No autorotation in this scope.
 
-### Torque reaction — open decision
+### Torque reaction
 
-The handoff applies `−Q·spinSign·shaftUp` (rotor drag) to the fuselage. Proposed instead: the
-**main shaft torque**, `Qshaft = Q + Imain·Ω̇`.
+```
+Qshaft = Q + Imain·Ω̇            // Ω̇ treated as 0 on a step where Ω is clamped at 0
+M      = −Qshaft·spinSign·shaftUp
+```
 
-- The fuselage is turned by the torque the transmission puts into the main shaft. In steady flight
-  that equals the rotor's drag `Q`, so all tuning below holds unchanged.
-- In transients they differ. A collective pull first slows the rotor, and the yaw kick builds as
-  the engine spools up, rather than arriving instantly. With the engine off the shaft carries
-  almost no torque, so the yaw reaction disappears instead of persisting while the rotor spins
-  down.
-- `Ω̇` is already computed by the drivetrain, so the cost is one term.
+The fuselage is turned by the torque the transmission puts into the main shaft, not by the rotor's
+drag directly. The handoff used `Q` alone; the shaft torque replaces it.
 
-Applied as `−Qshaft·spinSign·shaftUp` either way. **Not yet confirmed.**
+- In steady flight `Ω̇ = 0`, so `Qshaft = Q` and all tuning below holds unchanged.
+- A collective pull first slows the rotor; the yaw kick builds as the engine spools up instead of
+  arriving instantly.
+- With the engine off the shaft carries almost no torque, so the reaction disappears and the tail
+  rotor swings the nose left (CCW rotor), as in a real engine failure.
 
 ### Fuselage drag
 
@@ -166,7 +167,7 @@ tangential velocity. **No WheelColliders** for skids.
 6. Apply:
    ```csharp
    rb.AddForceAtPosition(T * n, mainHubPos);              // lift and control moments; hub above CG
-   rb.AddTorque(-Qshaft * spinSign * shaftUp);            // torque reaction (see open decision)
+   rb.AddTorque(-Qshaft * spinSign * shaftUp);            // torque reaction
    rb.AddTorque(Kβ * Vector3.Cross(shaftUp, n));          // hub moment, 0 for teetering rotors
    rb.AddForceAtPosition(Tt * tailAxis, tailHubPos);      // anti-torque
    rb.AddForceAtPosition(fuselageDragWorld, cpPos);
@@ -234,11 +235,21 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 | Cyclic | W / S, A / D | Ramps toward ±1 while held, returns to 0 on release | ~3 /s both ways |
 | Pedals | Q / E | Ramps toward ±1 while held, returns to 0 on release | ~2 /s |
 
-- A dedicated `Flight` action map with a generated C# wrapper: `Cyclic` (2D composite, WASD),
-  `Collective` (1D axis, Space/Ctrl), `Pedals` (1D axis, Q/E).
+- Asset `Assets/TGLabTest/Gameplay/Controls/FlightActions.inputactions`, with **Generate C# Class**
+  on. One `Flight` map: `Cyclic` (2D composite, WASD), `Collective` (1D axis, Space/Ctrl),
+  `Pedals` (1D axis, Q/E). One control scheme, `Keyboard`.
+- The generated wrapper is bound once in the SceneContext; `FlightControls` enables it on
+  initialize and disposes it on dispose. Each wrapper instance owns its own copy of the actions, so
+  Project-wide Actions are irrelevant to it.
+- The template `Assets/InputSystem_Actions.inputactions` is to be **deleted in the Editor** (it is
+  assigned as Project-wide Actions; deleting from disk would leave a dangling reference in
+  `EditorBuildSettings.asset`). Project-wide Actions stays empty; the settings page's prompt to
+  create them can be ignored.
 - Ramps and hold live only in `FlightControls`; the simulation consumes positions.
-- **Open:** whether the `Flight` map replaces the template's `Assets/InputSystem_Actions.inputactions`
-  or goes in a new asset beside it.
+- **Analogue devices later.** Bindings are per device — a gamepad does nothing until `<Gamepad>`
+  bindings are added. Sticks mean absolute positions while keys mean rate commands, and both read
+  1.0 at full deflection, so they need separate control schemes (`Keyboard`, `Gamepad`) with
+  `FlightControls` choosing ramp or pass-through by the active scheme.
 
 ## Unity setup
 
@@ -250,6 +261,10 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 - `useGravity = true`.
 - `interpolation = Interpolate`; the camera follows in `LateUpdate`.
 
+**Hull collider.** A simple collider on the prefab from milestone 1, so the helicopter can sit on
+the ground before the skids exist. Once the skids work, their springs hold it above the ground and
+the collider is only a crash hull.
+
 **Rotors** are not Rigidbodies; they exist only as math. Meshes are spun from `Ω` and tilted to
 `n`. At high RPM a blur-disk mesh replaces the blades, since HDRP motion blur handles rotors poorly.
 
@@ -258,8 +273,10 @@ from the origin: HDRP camera-relative rendering fixes visual jitter but not phys
 
 ## Telemetry overlay
 
-A developer tool for tuning, not part of the player experience (no HUD in the current scope). The
-handoff recommended building it early, since tuning without it is blind. Planned contents:
+A developer tool, not part of the player experience (no HUD in the current scope). IMGUI, reading
+`IHelicopterState`. A minimal version comes with milestone 1 so the milestone checks can be read
+off it — control positions, rotor rpm and %, thrust, engine torque, power, vertical speed. Full
+contents, grown as tuning needs them:
 
 - control positions `c, cx, cy, p`; blade pitches `θ, θt`;
 - rotor speed `Ω` in rpm and % of `Ωnom`;
@@ -303,8 +320,3 @@ negative drives the rotor) without special-case code.
 - **`n` must stay in world space.** Storing it relative to the shaft removes the disk lag that
   damps pitch and roll.
 - **Overrides silently break targets** — see *Configuration and coefficients*.
-
-## Open decisions
-
-- Torque reaction: rotor drag `Q` (handoff) or main shaft torque `Q + Imain·Ω̇` (proposed).
-- `Flight` action map: replace the template action asset or add a new one.

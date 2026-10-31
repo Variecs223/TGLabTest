@@ -34,7 +34,7 @@ The difficulty must come from the physics, never from scripted behaviour:
 | Location | Planned | A single simple outdoor location to take off from, fly around and land in. Built later. |
 | Helicopter | Planned | One aircraft with a simple visual model. Medium utility helicopter in the UH-1 class: two-blade main rotor turning counterclockwise seen from above, tail rotor on the left of the tail boom, skid landing gear. |
 | Camera | Planned | Third-person view following the helicopter. |
-| HUD | Planned (not now) | No HUD in the current scope. A developer telemetry overlay may exist for tuning, but it is not part of the player experience. |
+| HUD | Planned (not now) | No HUD in the current scope. A developer telemetry overlay is built for testing and tuning, but it is not part of the player experience. |
 
 ## Flight model
 
