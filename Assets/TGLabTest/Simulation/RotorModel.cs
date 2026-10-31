@@ -28,8 +28,7 @@ namespace TGLabTest.Simulation
             UpdateDiskNormal(sample, cyclicLateral, cyclicLongitudinal, deltaTime);
 
             float axialVelocity = Vector3.Dot(sample.HubVelocity, DiskNormal);
-            Thrust = _parameters.ThrustCoefficient * rotorSpeed * rotorSpeed * pitch
-                     - _parameters.AxialDamping * rotorSpeed * axialVelocity;
+            Thrust = _parameters.Thrust(rotorSpeed, pitch, axialVelocity);
             DragTorque = _parameters.DragTorque(rotorSpeed, pitch);
             HubMoment = _parameters.HubStiffness * Vector3.Cross(sample.ShaftUp, DiskNormal);
         }

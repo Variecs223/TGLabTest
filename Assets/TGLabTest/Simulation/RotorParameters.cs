@@ -40,6 +40,9 @@ namespace TGLabTest.Simulation
             HubStiffness = hubStiffness;
         }
 
+        public float Thrust(float rotorSpeed, float pitch, float axialVelocity) =>
+            ThrustCoefficient * rotorSpeed * rotorSpeed * pitch - AxialDamping * rotorSpeed * axialVelocity;
+
         public float DragTorque(float rotorSpeed, float pitch) =>
             rotorSpeed * rotorSpeed * (BaseTorqueCoefficient + PitchTorqueCoefficient * pitch * pitch);
     }

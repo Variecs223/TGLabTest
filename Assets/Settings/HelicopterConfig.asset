@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54fcdeb018da38b45b1b2b1a2e9adec1, type: 3}
+  m_Name: HelicopterConfig
+  m_EditorClassIdentifier: TGLabTest.Simulation::TGLabTest.Simulation.HelicopterConfig
+  _mass: 4300
+  _inertia: {x: 24700, y: 21000, z: 3750}
+  _centerOfMass: {x: 0, y: 1.4, z: 0}
+  _mainHubOffset: {x: 0, y: 1.8, z: 0}
+  _tailHubOffset: {x: 0, y: 1, z: -8.6}
+  _centerOfPressureOffset: {x: 0, y: 0, z: -0.5}
+  _skidContactOffsets:
+  - {x: -1.3, y: -1.4, z: 1.5}
+  - {x: 1.3, y: -1.4, z: 1.5}
+  - {x: -1.3, y: -1.4, z: -1.5}
+  - {x: 1.3, y: -1.4, z: -1.5}
+  _spinDirection: -1
+  _nominalRotorSpeedRpm: 324
+  _collectivePitchRangeDegrees: {x: 0, y: 15}
+  _maxTiltLongitudinalDegrees: 8
+  _maxTiltLateralDegrees: 6
+  _diskLagSeconds: 0.1
+  _hubStiffness: 0
+  _mainRotorInertia: 6000
+  _tailGearRatio: 5.1
+  _tailPitchRangeDegrees: {x: -8, y: 20}
+  _tailNeutralPitchDegrees: 8
+  _tailRotorInertia: 15
+  _hoverPowerKilowatts: 700
+  _maxPowerKilowatts: 1000
+  _spoolTimeSeconds: 1
+  _governorDroopPercent: 3
+  _drivetrainFrictionTorque: 200
+  _minPowerRotorSpeedPercent: 10
+  _maxClimbRate: 10
+  _tailPowerSharePercent: 12
+  _maxYawRateDegrees: 60
+  _dragAreas: {x: 10, y: 15, z: 2}
+  _angularDamping: {x: 0, y: 0, z: 0}
+  _airDensity: 1.225
+  _skidStiffness: 210000
+  _skidDamping: 18000
+  _skidSuspensionLength: 0.3
+  _skidFrictionCoefficient: 0.6
+  _skidFrictionDamping: 20000
+  _thrustCoefficient:
+    _enabled: 0
+    _value: 0
+  _axialDamping:
+    _enabled: 0
+    _value: 0
+  _baseTorqueCoefficient:
+    _enabled: 0
+    _value: 0
+  _pitchTorqueCoefficient:
+    _enabled: 0
+    _value: 0
+  _tailThrustCoefficient:
+    _enabled: 0
+    _value: 0
+  _tailAxialDamping:
+    _enabled: 0
+    _value: 0
+  _tailBaseTorqueCoefficient:
+    _enabled: 0
+    _value: 0
+  _tailPitchTorqueCoefficient:
+    _enabled: 0
+    _value: 0
+  _engineTorqueRate:
+    _enabled: 0
+    _value: 0
+  _governorGain:
+    _enabled: 0
+    _value: 0

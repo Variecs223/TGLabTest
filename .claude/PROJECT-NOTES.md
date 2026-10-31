@@ -5,8 +5,8 @@ Implementation specifics for the helicopter simulator. Structure and component r
 
 ## Current state
 
-No project code yet. The design is agreed (`GAME-DESIGN.md`, `ARCHITECTURE.md`). Implementation
-progress is tracked step by step in `IMPLEMENTATION-PLAN.md`.
+The simulation core (`TGLabTest.Simulation`) is written and compiles; nothing is wired into a scene
+yet. Implementation progress is tracked step by step in `IMPLEMENTATION-PLAN.md`.
 
 ## Project setup
 
@@ -98,6 +98,9 @@ tailAxis = −spinSign·transform.right
 - `GetPointVelocity` includes rotation, so when the fuselage yaws the tail hub moves along the tail
   axis and the `kvt` term opposes it — yaw damping for free.
 - `Tt` may go negative at negative pitch; that is correct.
+- The tail rotor has **no disk lag and no tilt**: its thrust axis is always `tailAxis`. A lagging
+  tail disk would tilt the tail thrust fore or aft while yawing (~6° at 1 rad/s), adding a false
+  longitudinal force. In code it is the same `RotorModel` with zero tilt range and zero lag.
 - Tail thrust acts above or below the CG, giving a small roll moment and the translating tendency.
   Both are real; keep them.
 
@@ -113,8 +116,13 @@ Qeng  += clamp(Qcmd − Qeng, −rate·dt, rate·dt)
 Itotal = Imain + gt²·Itail
 ```
 
-- `Kgov` — governor gain: how much torque it asks for per rad/s of rotor speed error. P-only; it
-  leaves a small steady droop under load. Add an integral term if that droop becomes visible.
+- `Kgov` — governor gain: how much torque it asks for per rad/s of rotor speed error. P-only, so it
+  settles below its target by `torque / Kgov` under load (~2 % at hover with the defaults).
+- `Ωtarget` is therefore **not** `Ωnom`: it is raised by the hover droop,
+  `Ωtarget = Ωnom + Qhover_total / Kgov`, where `Qhover_total` is main rotor drag + `gt`·tail rotor
+  drag + friction at hover. A steady hover then settles exactly at `Ωnom`, so mid collective still
+  hovers. Side effect: at low collective the rotor runs ~2 % fast, as real P governors do. Computed
+  from the effective (post-override) coefficients.
 - `Qmax` — the engine can give at most `Pmax` of power, so the torque available falls as rotor
   speed rises. `Ωmin` stops it dividing by zero at standstill.
 - `rate` — how fast engine torque can change (spool lag).
@@ -153,8 +161,20 @@ Gravity comes from Unity (`useGravity = true`); weight is never added manually.
 ### Landing gear
 
 Raycast spring-dampers at four skid points, pushing along the hit normal:
-`F = k·compression + c·compressionRate`, clamped at ≥ 0 (the ground never pulls). Friction opposes
-tangential velocity. **No WheelColliders** for skids.
+`F = k·compression + c·compressionRate`, clamped at ≥ 0 (the ground never pulls). **No
+WheelColliders** for skids.
+
+- Each ray starts `SuspensionLength` (0.3 m) above its contact point along body up and is cast that
+  far down. `compression = SuspensionLength − hitDistance`: zero when the ground is exactly at the
+  contact point, positive as the skid sinks in. Contact points therefore sit at the skid's unloaded
+  bottom; at rest the skids sink ~5 cm.
+- `compressionRate = −Dot(contactVelocity, hitNormal)` — from velocity, so the gear keeps no state
+  between steps.
+- Friction is viscous with a Coulomb cap: `−slipVelocity·frictionDamping`, clamped to
+  `μ·normalForce`. Isotropic — sliding along the skids is as hard as sideways. On a slope it creeps
+  slowly rather than holding perfectly still.
+- The skids replace collision response with the ground only. Movement is still Unity's Rigidbody,
+  the ground is found with `Physics.Raycast`, and the hull collider handles crashes.
 
 ### Applying forces (each fixed step)
 
@@ -177,9 +197,26 @@ tangential velocity. **No WheelColliders** for skids.
 
 ## Configuration and coefficients
 
-`HelicopterConfig` holds tuning **targets**. `HelicopterParameters` derives the coefficients from
-them, then replaces any coefficient whose override is enabled with its manual value. The inspector
-shows each coefficient's derived value next to its override.
+`HelicopterConfig` holds tuning **targets**. `HelicopterCoefficients.Derive` computes the
+coefficients from them; `WithOverrides` replaces any coefficient whose override is enabled with its
+manual value; `HelicopterParameters` packs the result per part (`RotorParameters` ×2,
+`DrivetrainParameters`, `FuselageParameters`, `SkidGearParameters`).
+
+- **Units.** Serialized fields are in inspector units — degrees, rpm, kW, % — and carry the unit in
+  their name. The config's public getters return SI and radians; conversion happens only there.
+- **Geometry** lives in the config as offsets **relative to the centre of mass**: main hub, tail
+  hub, centre of pressure, skid contacts. The centre of mass itself is relative to the prefab root.
+  `Larm = −TailHubOffset.z`.
+- **Blade pitch from controls** is `HelicopterParameters.MainRotorPitch(collective)` and
+  `TailRotorPitch(pedals)`; the pedal sign rule lives there.
+- **Inspector** (`HelicopterConfigEditor`): the config fields, then a *Coefficients* table — derived
+  value, override toggle, manual value. Enabling an override seeds it with the derived value. Below
+  it a *Hover balance* readout from the effective parameters: hover pitch, thrust vs. weight, main
+  rotor torque, tail thrust, yaw imbalance, drivetrain power vs. max, tail rotor speed, governor
+  target. With no overrides thrust/weight is 100 % and yaw imbalance 0; an override shows how far it
+  moves the aircraft off its targets.
+- Parameters are built once when the helicopter starts. Changing the config in play mode does not
+  reach the running simulation.
 
 **Overriding a coefficient breaks the target it was derived from** — overriding `kT` means mid
 collective no longer hovers. The inspector shows the derived value beside the override so the
@@ -214,7 +251,7 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 | `gt` | ~5.1 |
 | `θmin..θmax` | 0 .. 0.26 rad (0–15°) |
 | `θtMin..θtMax` | −0.14 .. 0.35 rad (−8° .. +20°) |
-| `θtNeutral` | to choose within the range; it sets how much pedal authority lies each side of hover |
+| `θtNeutral` | 8° — sets how much pedal authority lies each side of hover |
 | `maxTiltLon / maxTiltLat` | 0.14 / 0.10 rad (8° / 6°) |
 | `τ` disk lag | 0.1 s (0.08–0.12) |
 | `Phover` / `Pmax` | ~700 kW / ~1,000 kW |
@@ -225,7 +262,19 @@ coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
 | `Kβ` | 0 (teetering) |
 | skid spring `k` per contact | ~2.1e5 N/m (≈ 5 cm static compression on 4 contacts) |
 | skid damper `c` per contact | ~1.8e4 N·s/m |
-| `st`, `rmax`, `tspool`, `δΩ`, `Itail`, `Qfriction`, `Ωmin` | to choose at implementation |
+| `st` tail power share | 12 % |
+| `rmax` max yaw rate | 60°/s |
+| `tspool` | 1 s |
+| `δΩ` governor droop | 3 % |
+| `Itail` | 15 kg·m² |
+| `Qfriction` | 200 N·m |
+| `Ωmin` power-limit floor | 10 % of `Ωnom` |
+| centre of mass | (0, 1.4, 0) from the prefab root |
+| main hub / tail hub / centre of pressure offsets | (0, 1.8, 0) / (0, 1, −8.6) / (0, 0, −0.5) |
+| skid contact offsets | (±1.3, −1.4, ±1.5) |
+| skid suspension length | 0.3 m |
+| skid friction `μ` / damping | 0.6 / 2e4 N·s/m |
+| `ρ` air density | 1.225 kg/m³ |
 
 ## Controls
 

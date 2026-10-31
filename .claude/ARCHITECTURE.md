@@ -61,8 +61,10 @@ reference that would break that rule doesn't compile.
 | Component | Kind | Purpose |
 |---|---|---|
 | `HelicopterConfig` | ScriptableObject | Everything that describes one aircraft: mass and inertia, geometry offsets, control ranges, tuning **targets** (hover power, climb rate, …), plus an optional manual override per derived coefficient. |
-| `HelicopterParameters` | Plain C# | The runtime values the models use. Built from a config: derives every coefficient from the targets, then applies whichever overrides are enabled. The single source of coefficients for both the simulation and the inspector. |
+| `HelicopterCoefficients` | Struct | Derives every coefficient from the config's targets, and applies the config's overrides. The single source of coefficients for both the simulation and the inspector. |
+| `HelicopterParameters` | Plain C# | The runtime values the models use, built from a config: effective coefficients split per part (`RotorParameters`, `DrivetrainParameters`, `FuselageParameters`, `SkidGearParameters`), geometry, and the mapping from control positions to blade pitch. |
 | `ControlPositions` | Struct | The four control positions: collective, cyclic lateral, cyclic longitudinal, pedals. The only input the simulation accepts. |
+| `RotorSample`, `SkidContactSample` | Structs | The sampled body state a model needs for one step: shaft axes and hub velocity; contact position and velocity. |
 | `RotorModel` | Plain C# | Thrust, drag torque and disk tilt for one rotor. Two instances: main and tail. |
 | `Drivetrain` | Plain C# | Engine torque, governor and rotor speed. Takes the rotors' drag torques, integrates rotor speed. |
 | `FuselageAero` | Plain C# | Fuselage drag at the centre of pressure. |
@@ -94,7 +96,7 @@ replaces `RotorModel`'s internals and nothing else.
 
 | Component | Purpose |
 |---|---|
-| `HelicopterConfigEditor` | Inspector for `HelicopterConfig`: tuning targets at the top; below them, every coefficient with its derived value, an override toggle and the manual value. Values come from `HelicopterParameters`, so the inspector shows exactly what the simulation uses. |
+| `HelicopterConfigEditor` | Inspector for `HelicopterConfig`: the config fields; every coefficient with its derived value, an override toggle and the manual value; a hover-balance readout. Values come from `HelicopterCoefficients` and `HelicopterParameters`, so the inspector shows exactly what the simulation uses. |
 
 ## Contexts and bindings
 

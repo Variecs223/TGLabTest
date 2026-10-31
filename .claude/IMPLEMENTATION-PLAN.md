@@ -28,13 +28,14 @@ read at the start of the next prompt, and errors are fixed before moving on.
 - [x] `Drivetrain` — governor, spool-limited engine torque, power limit, `Ω`, `Ω̇`, shaft torque
 - [x] `FuselageAero` — per-axis drag at the centre of pressure, optional angular damping
 - [x] `IGroundProbe`, `SkidGear` — spring-damper contacts with friction
-- [ ] Compile confirmed in Unity **(you)**
+- [x] Compile confirmed in Unity **(you)**
 
 ## 3. Config inspector (`TGLabTest.EditorTools`)
 
-- [ ] `HelicopterConfigEditor` — targets; each coefficient's derived value, override toggle, manual value
+- [x] `HelicopterConfigEditor` — config fields; each coefficient's derived value, override toggle, manual value; hover-balance readout
+- [ ] Compile confirmed in Unity **(you)**
 - [ ] Create the UH-1 config asset with the starting values **(you)**
-- [ ] Sanity check of derived values against hand calculation: `kT ≈ 282`, `kv ≈ 125`, `Qh ≈ 20.6 kN·m`, hover tail thrust `≈ 2.4 kN`, `Ωt_nom ≈ 173 rad/s`
+- [ ] Sanity check of derived values against hand calculation: `kT ≈ 279.9`, `kv ≈ 124.3`, `q0 ≈ 5.376`, `q1 ≈ 732.1`, `kTt ≈ 0.5738`, `kvt ≈ 2.309`, `q0t ≈ 0.004863`, `q1t ≈ 0.582`, `rate ≈ 8842`, `Kgov ≈ 28956`; hover: torque `≈ 20.63 kN·m`, tail thrust `≈ 2.399 kN`, drivetrain power `≈ 791 kW`, tail rotor speed `≈ 173.0 rad/s`, governor target `≈ 331.7 rpm`
 
 ## 4. Controls (`TGLabTest.Gameplay.Controls`)
 

@@ -13,6 +13,7 @@ namespace TGLabTest.Simulation
         public Vector3 CenterOfPressureOffset { get; }
         public IReadOnlyList<Vector3> SkidContactOffsets { get; }
         public int SpinSign { get; }
+        public float HoverDrivetrainTorque { get; }
 
         public RotorParameters MainRotor { get; }
         public RotorParameters TailRotor { get; }
@@ -60,14 +61,14 @@ namespace TGLabTest.Simulation
                 hubStiffness: 0f);
 
             float rotorSpeed = config.NominalRotorSpeed;
-            float hoverDrivetrainTorque =
+            HoverDrivetrainTorque =
                 MainRotor.DragTorque(rotorSpeed, MainRotor.NeutralPitch)
                 + config.TailGearRatio * TailRotor.DragTorque(config.TailGearRatio * rotorSpeed, TailRotor.NeutralPitch)
                 + config.DrivetrainFrictionTorque;
 
             Drivetrain = new DrivetrainParameters(
                 nominalRotorSpeed: rotorSpeed,
-                governorTargetSpeed: rotorSpeed + hoverDrivetrainTorque / coefficients.GovernorGain,
+                governorTargetSpeed: rotorSpeed + HoverDrivetrainTorque / coefficients.GovernorGain,
                 governorGain: coefficients.GovernorGain,
                 maxPower: config.MaxPower,
                 minPowerRotorSpeed: config.MinPowerRotorSpeed,
