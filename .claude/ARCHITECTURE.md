@@ -4,7 +4,7 @@ What the project consists of, what each part is for, and how the parts interact.
 specifics, the physics model, Unity settings and pitfalls live in `PROJECT-NOTES.md`. Intended
 behaviour lives in `GAME-DESIGN.md`.
 
-Nothing is implemented yet; this is the agreed structure.
+Implemented as described, except `RotorVisual`, which is still to come.
 
 ## Overview
 

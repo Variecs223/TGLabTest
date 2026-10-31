@@ -72,11 +72,11 @@ namespace TGLabTest.Simulation
         [SerializeField] private CoefficientOverride _thrustCoefficient;
         [SerializeField] private CoefficientOverride _axialDamping;
         [SerializeField] private CoefficientOverride _baseTorqueCoefficient;
-        [SerializeField] private CoefficientOverride _pitchTorqueCoefficient;
+        [SerializeField] private CoefficientOverride _hoverInducedVelocity;
         [SerializeField] private CoefficientOverride _tailThrustCoefficient;
         [SerializeField] private CoefficientOverride _tailAxialDamping;
         [SerializeField] private CoefficientOverride _tailBaseTorqueCoefficient;
-        [SerializeField] private CoefficientOverride _tailPitchTorqueCoefficient;
+        [SerializeField] private CoefficientOverride _tailHoverInducedVelocity;
         [SerializeField] private CoefficientOverride _engineTorqueRate;
         [SerializeField] private CoefficientOverride _governorGain;
 
@@ -129,11 +129,11 @@ namespace TGLabTest.Simulation
         public CoefficientOverride ThrustCoefficientOverride => _thrustCoefficient;
         public CoefficientOverride AxialDampingOverride => _axialDamping;
         public CoefficientOverride BaseTorqueCoefficientOverride => _baseTorqueCoefficient;
-        public CoefficientOverride PitchTorqueCoefficientOverride => _pitchTorqueCoefficient;
+        public CoefficientOverride HoverInducedVelocityOverride => _hoverInducedVelocity;
         public CoefficientOverride TailThrustCoefficientOverride => _tailThrustCoefficient;
         public CoefficientOverride TailAxialDampingOverride => _tailAxialDamping;
         public CoefficientOverride TailBaseTorqueCoefficientOverride => _tailBaseTorqueCoefficient;
-        public CoefficientOverride TailPitchTorqueCoefficientOverride => _tailPitchTorqueCoefficient;
+        public CoefficientOverride TailHoverInducedVelocityOverride => _tailHoverInducedVelocity;
         public CoefficientOverride EngineTorqueRateOverride => _engineTorqueRate;
         public CoefficientOverride GovernorGainOverride => _governorGain;
     }

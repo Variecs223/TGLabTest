@@ -29,7 +29,7 @@ namespace TGLabTest.Simulation
 
             float axialVelocity = Vector3.Dot(sample.HubVelocity, DiskNormal);
             Thrust = _parameters.Thrust(rotorSpeed, pitch, axialVelocity);
-            DragTorque = _parameters.DragTorque(rotorSpeed, pitch);
+            DragTorque = _parameters.DragTorque(rotorSpeed, Thrust, axialVelocity);
             HubMoment = _parameters.HubStiffness * Vector3.Cross(sample.ShaftUp, DiskNormal);
         }
 

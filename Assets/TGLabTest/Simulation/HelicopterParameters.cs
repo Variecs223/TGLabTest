@@ -34,11 +34,14 @@ namespace TGLabTest.Simulation
             SkidContactOffsets = new List<Vector3>(config.SkidContactOffsets);
             SpinSign = (int)config.SpinDirection;
 
+            float rotorSpeed = config.NominalRotorSpeed;
+
             MainRotor = new RotorParameters(
                 thrustCoefficient: coefficients.ThrustCoefficient,
                 axialDamping: coefficients.AxialDamping,
                 baseTorqueCoefficient: coefficients.BaseTorqueCoefficient,
-                pitchTorqueCoefficient: coefficients.PitchTorqueCoefficient,
+                hoverInducedVelocity: coefficients.HoverInducedVelocity,
+                nominalRotorSpeed: rotorSpeed,
                 minPitch: config.MinCollectivePitch,
                 neutralPitch: HelicopterCoefficients.HoverPitch(config),
                 maxPitch: config.MaxCollectivePitch,
@@ -51,7 +54,8 @@ namespace TGLabTest.Simulation
                 thrustCoefficient: coefficients.TailThrustCoefficient,
                 axialDamping: coefficients.TailAxialDamping,
                 baseTorqueCoefficient: coefficients.TailBaseTorqueCoefficient,
-                pitchTorqueCoefficient: coefficients.TailPitchTorqueCoefficient,
+                hoverInducedVelocity: coefficients.TailHoverInducedVelocity,
+                nominalRotorSpeed: config.TailGearRatio * rotorSpeed,
                 minPitch: config.MinTailPitch,
                 neutralPitch: config.TailNeutralPitch,
                 maxPitch: config.MaxTailPitch,
@@ -60,10 +64,9 @@ namespace TGLabTest.Simulation
                 diskLag: 0f,
                 hubStiffness: 0f);
 
-            float rotorSpeed = config.NominalRotorSpeed;
             HoverDrivetrainTorque =
-                MainRotor.DragTorque(rotorSpeed, MainRotor.NeutralPitch)
-                + config.TailGearRatio * TailRotor.DragTorque(config.TailGearRatio * rotorSpeed, TailRotor.NeutralPitch)
+                MainRotor.DragTorque(rotorSpeed, MainRotor.HoverThrust, 0f)
+                + config.TailGearRatio * TailRotor.DragTorque(config.TailGearRatio * rotorSpeed, TailRotor.HoverThrust, 0f)
                 + config.DrivetrainFrictionTorque;
 
             Drivetrain = new DrivetrainParameters(

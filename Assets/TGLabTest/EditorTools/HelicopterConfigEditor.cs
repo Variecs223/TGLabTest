@@ -21,16 +21,18 @@ namespace TGLabTest.EditorTools
                 "Thrust lost per rotor speed per m/s of climb along the thrust axis.", c => c.AxialDamping),
             new CoefficientRow("_baseTorqueCoefficient", "q0", "Main base torque",
                 "Drag torque per rotor speed² at zero blade pitch.", c => c.BaseTorqueCoefficient),
-            new CoefficientRow("_pitchTorqueCoefficient", "q1", "Main pitch torque",
-                "Extra drag torque per rotor speed² per blade pitch².", c => c.PitchTorqueCoefficient),
+            new CoefficientRow("_hoverInducedVelocity", "vh", "Main hover downwash",
+                "Speed of the air pushed down through the disk in a hover, m/s. Sets how much power thrust costs.",
+                c => c.HoverInducedVelocity),
             new CoefficientRow("_tailThrustCoefficient", "kTt", "Tail thrust",
                 "Tail thrust per tail rotor speed² per radian of blade pitch.", c => c.TailThrustCoefficient),
             new CoefficientRow("_tailAxialDamping", "kvt", "Tail yaw damping",
                 "Tail thrust lost per tail rotor speed per m/s of tail hub motion along its axis.", c => c.TailAxialDamping),
             new CoefficientRow("_tailBaseTorqueCoefficient", "q0t", "Tail base torque",
                 "Tail drag torque per tail rotor speed² at zero blade pitch.", c => c.TailBaseTorqueCoefficient),
-            new CoefficientRow("_tailPitchTorqueCoefficient", "q1t", "Tail pitch torque",
-                "Extra tail drag torque per tail rotor speed² per blade pitch².", c => c.TailPitchTorqueCoefficient),
+            new CoefficientRow("_tailHoverInducedVelocity", "vht", "Tail hover downwash",
+                "Speed of the air pushed through the tail disk at hover thrust, m/s. Sets how much power tail thrust costs.",
+                c => c.TailHoverInducedVelocity),
             new CoefficientRow("_engineTorqueRate", "rate", "Engine torque rate",
                 "How fast engine torque can change, N·m/s.", c => c.EngineTorqueRate),
             new CoefficientRow("_governorGain", "Kgov", "Governor gain",
@@ -108,7 +110,7 @@ namespace TGLabTest.EditorTools
             float tailRotorSpeed = rotorSpeed * drivetrain.TailGearRatio;
             float weight = parameters.Mass * Physics.gravity.magnitude;
             float thrust = main.Thrust(rotorSpeed, main.NeutralPitch, 0f);
-            float mainTorque = main.DragTorque(rotorSpeed, main.NeutralPitch);
+            float mainTorque = main.DragTorque(rotorSpeed, thrust, 0f);
             float tailThrust = tail.Thrust(tailRotorSpeed, tail.NeutralPitch, 0f);
             float tailMoment = tailThrust * -parameters.TailHubOffset.z;
             float hoverPower = parameters.HoverDrivetrainTorque * rotorSpeed;

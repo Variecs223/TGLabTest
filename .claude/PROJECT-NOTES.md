@@ -5,8 +5,18 @@ Implementation specifics for the helicopter simulator. Structure and component r
 
 ## Current state
 
-The simulation core, config inspector, controls and gameplay wiring are written. The scene and
-helicopter prefab are not built yet, so nothing has flown. Implementation progress is tracked step by step in `IMPLEMENTATION-PLAN.md`.
+The simulation core, config inspector, controls, gameplay wiring, a placeholder helicopter prefab
+and a test scene with a terrain collider are built. Milestone 1 (vertical only, rotations frozen)
+passes: mid collective hovers, full collective climbs steadily at ~9 m/s with rotor speed held, and
+a fast pull droops and recovers RPM. Implementation progress is tracked step by step in
+`IMPLEMENTATION-PLAN.md`.
+
+**Observed, not yet addressed:** the helicopter drifts steadily to the right. This is the tail
+rotor's translating tendency (see *Tail rotor*): ~2.4 kN of sideways tail thrust, resisted only by
+fuselage side drag, settles at roughly 20 m/s with rotations frozen. A real pilot cancels it with a
+held bit of left cyclic (~3° of disk tilt, about half the lateral range). With spring-return
+keyboard cyclic that can't be held steadily — to be revisited in milestone 3 (force trim, or a
+lateral mast tilt in the config, as some real helicopters are rigged).
 
 ## Project setup
 
@@ -54,17 +64,32 @@ helicopter prefab are not built yet, so nothing has flown. Implementation progre
 
 ```
 θ = lerp(θmin, θmax, c)
-T = kT·Ω²·θ − kv·Ω·Vup
-Q = Ω²·(q0 + q1·θ²)
+T  = kT·Ω²·θ − kv·Ω·Vup
+vi = √((Vup/2)² + vh²·|T|/Th) − Vup/2
+Q  = Ω²·q0 + |T|·(vi + Vup)/Ω                    // Vup taken along the thrust direction; Q = Ω²·q0 at Ω = 0
 ```
 
 - `kT·Ω²·θ` — thrust grows with blade pitch and with the square of rotor speed.
-- `−kv·Ω·Vup` — the one aerodynamic term kept. Climbing along the thrust axis reduces thrust,
-  descending increases it. This is the vertical damping and the natural climb-rate cap; without it
-  any collective above hover accelerates upward forever.
-- `q0` — drag of the blades spinning at zero pitch; a rotor always needs some power.
-- `q1·θ²` — extra drag from producing lift. It grows faster than thrust, so big collective pulls
-  load the engine hard.
+- `−kv·Ω·Vup` — the one aerodynamic term kept in thrust. Climbing along the thrust axis reduces
+  thrust, descending increases it. This is the vertical damping and the natural climb-rate cap;
+  without it any collective above hover accelerates upward forever.
+- `Ω²·q0` — **profile** torque: drag of the blades spinning through the air, independent of lift.
+- `|T|·(vi + Vup)` — the power the rotor spends on the air (momentum theory), divided by `Ω` to give
+  torque. Two parts: `T·vi` — **induced** power, the cost of pushing air down to make lift; `T·Vup`
+  — **climb** power, the cost of lifting the weight.
+- `vi` — **induced velocity**, the speed of the downwash through the disk. `vh` is its value in a
+  hover at hover thrust `Th`; it grows with √thrust. Climbing feeds air into the disk from above,
+  so the rotor needs to push less of its own and `vi` drops.
+- **Why not torque from blade pitch.** An earlier `Q = Ω²·(q0 + q1·θ²)` charged power for pitch as
+  if the helicopter were stationary. In a climb the blades meet the air at a smaller angle, so it
+  overstated full-collective torque ~3× (≈2,170 kW vs. 1,000 kW available): the rotor drooped to
+  ~75 % and climb stalled at ~2 m/s. The power-based form is consistent with the thrust formula's
+  climb term.
+- Pulling more collective than the engine can power still droops the rotor — overpitching, real
+  behaviour. Full collective on the ground (no climb yet, `T` ≈ 2× weight) does this briefly until
+  the climb speed builds and the power demand falls.
+- Descent lowers the power demand smoothly; `vi + Vup` never goes negative, so the air never drives
+  the rotor (no autorotation in this scope; no vortex ring state).
 
 **Disk tilt from cyclic, with lag:**
 ```
@@ -86,7 +111,7 @@ u  = p·spinSign                                  // +1 = more tail thrust, what
 θt = θtNeutral + u·(θtMax − θtNeutral)   if u ≥ 0
 θt = θtNeutral + u·(θtNeutral − θtMin)   if u < 0
 Tt = kTt·Ωt²·θt − kvt·Ωt·Vaxial                  // Vaxial = Dot(rb.GetPointVelocity(tailHubPos), tailAxis)
-Qt = Ωt²·(q0t + q1t·θt²)
+Qt = Ωt²·q0t + |Tt|·(vit + Vaxial)/Ωt            // vit as vi, with vht and the tail's hover thrust
 tailAxis = −spinSign·transform.right
 ```
 
@@ -230,10 +255,10 @@ deviation stays visible.
 | # | Target | Derived |
 |---|---|---|
 | 1 | Hover at `c = 0.5`, `Ω = Ωnom`, `Vup = 0`: `T = m·g` | `θh = lerp(θmin, θmax, 0.5)`; `kT = m·g / (Ωnom²·θh)` |
-| 2 | Hover power `Phover` | `Qh = Phover / Ωnom`; `q0 = 0.3·Qh / Ωnom²`; `q1 = 0.7·Qh / (Ωnom²·θh²)` |
+| 2 | Main rotor hover power `Phover`, 30 % profile / 70 % induced | `Qh = Phover / Ωnom`; `q0 = 0.3·Qh / Ωnom²`; `vh = 0.7·Phover / (m·g)` |
 | 3 | Max climb rate `Vclimb` at full collective (fuselage drag ignored) | `kv = kT·Ωnom·(θmax − θh) / Vclimb` |
 | 4 | Tail rotor balances hover torque at centred pedals: `Tt·Larm = Qh` (`Larm` = horizontal CG-to-tail-hub distance) | `Ωt_nom = gt·Ωnom`; `kTt = (Qh / Larm) / (Ωt_nom²·θtNeutral)` |
-| 5 | Tail rotor uses a share `st` of hover power (10–15 %) | `q0t`, `q1t` split the tail drag torque `st·Phover / Ωt_nom` the same 30/70 way as the main rotor |
+| 5 | Tail rotor uses a share `st` of hover power (10–15 %), split 30/70 like the main rotor | `q0t = 0.3·(st·Phover / Ωt_nom) / Ωt_nom²`; `vht = 0.7·st·Phover / Tt_hover`, `Tt_hover = Qh / Larm` |
 | 6 | Max yaw rate `rmax` at full pedal in hover | `kvt = kTt·Ωt_nom·(θtMax − θtNeutral) / (rmax·Larm)` |
 | 7 | Engine power `Pmax ≈ 1.3–1.5 × Phover` | `Qmax_nom = Pmax / Ωnom` |
 | 8 | Spool time `tspool` from hover to full torque (0.5–2 s) | `rate = (Qmax_nom − Qh) / tspool` |
@@ -241,6 +266,21 @@ deviation stays visible.
 
 Rows 1–5 and 7 come from the original plan. Rows 6, 8 and 9 are proposed here to keep every
 coefficient target-driven; they replace hand-picked `kvt`, `rate` and `Kgov`.
+
+`Phover` is the **main rotor's** hover power; the drivetrain total at hover adds the tail share and
+friction (~791 kW with the defaults). Each rotor's hover thrust `Th` is computed from its effective
+coefficients at neutral pitch and nominal speed, so a `kT` override keeps `vh` meaning "downwash at
+this rotor's hover thrust".
+
+Derived values with the defaults: `kT ≈ 279.9`, `kv ≈ 124.3`, `q0 ≈ 5.376`, `vh ≈ 11.6 m/s`,
+`kTt ≈ 0.5738`, `kvt ≈ 2.309`, `q0t ≈ 0.004863`, `vht ≈ 24.5 m/s`, `rate ≈ 8842`, `Kgov ≈ 28956`.
+Hover: main torque ≈ 20.63 kN·m, tail thrust ≈ 2.399 kN, drivetrain power ≈ 791 kW, governor
+target ≈ 331.7 rpm.
+
+**Climb rate vs. power.** Row 3 sets `kv` assuming rotor speed holds at full collective, but a
+sustained 10 m/s climb needs ~1,045 kW against the 1,000 kW `Pmax`, so the rotor droops slightly and
+the climb settles a little lower (~9 m/s observed). Raise `Pmax` to ~1,060 kW if the full target
+matters.
 
 ### Starting values (UH-1H-like, approximate)
 
@@ -348,8 +388,9 @@ contents, grown as tuning needs them:
 
 ## Upgrade path: detailed aerodynamics
 
-Not in the current scope. Replaces the simple thrust and torque formulas inside `RotorModel` with a
-blade-element and momentum-theory rotor; the rest of the architecture stays the same.
+Not in the current scope. Replaces the simple thrust formula and the axial-only momentum-theory
+torque inside `RotorModel` with a full blade-element and momentum-theory rotor; the rest of the
+architecture stays the same.
 
 ```
 μ  = |V in disk plane| / (ΩR)                              // advance ratio

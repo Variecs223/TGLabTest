@@ -47,9 +47,9 @@ The model simulates these parts:
 
 | Part | Status | What it simulates |
 |---|---|---|
-| Main rotor | Planned | Thrust and drag torque from blade pitch and rotor speed. Climbing reduces thrust and descending increases it, which damps vertical motion and caps the climb rate. The rotor disk tilts with cyclic, and the tilt lags slightly behind the fuselage, which damps pitch and roll. |
+| Main rotor | In progress — vertical behaviour verified (milestone 1); cyclic and disk lag untested | Thrust and drag torque from blade pitch and rotor speed. Climbing reduces thrust and descending increases it, which damps vertical motion and caps the climb rate. The rotor disk tilts with cyclic, and the tilt lags slightly behind the fuselage, which damps pitch and roll. |
 | Tail rotor | Planned | The same model, smaller, geared to the main rotor. Its thrust opposes the main rotor's torque reaction. Its response to the fuselage swinging provides yaw damping. |
-| Engine and governor | Planned | Delivers torque to the rotors to hold a target rotor speed. Its output is limited in both maximum power and how fast it can change, so heavy loads droop rotor RPM until it catches up. Fuel is infinite. |
+| Engine and governor | Complete | Delivers torque to the rotors to hold a target rotor speed. Its output is limited in both maximum power and how fast it can change, so heavy loads droop rotor RPM until it catches up. Fuel is infinite. |
 | Fuselage | Planned | Air drag on all three axes, acting slightly behind the centre of mass, so the helicopter limits its own top speed and tends to weathervane into its direction of travel. |
 | Landing gear | Planned | Four spring-damped contact points on the skids with ground friction, allowing take-off, landing and sitting on the ground. |
 
@@ -119,7 +119,7 @@ Each stage is accepted when its checks hold.
 
 | # | Stage | Status | Acceptance checks |
 |---|---|---|---|
-| 1 | Vertical only (rotation frozen) | Planned | Mid collective holds a hover. Full collective climbs and settles at a steady maximum climb rate. A fast collective pull shows visible RPM droop, then recovery. |
+| 1 | Vertical only (rotation frozen) | Complete | Mid collective holds a hover. Full collective climbs and settles at a steady maximum climb rate. A fast collective pull shows visible RPM droop, then recovery. |
 | 2 | Yaw | Planned | Collective changes cause yaw that needs pedal to correct. With pedals released at hover collective, the helicopter only drifts slowly in yaw. |
 | 3 | Full six degrees of freedom | Planned | Hover is possible but needs constant small corrections. Forward cyclic drops the nose and the helicopter accelerates forward. |
 | 4 | Fuselage drag and skids | Planned | A stable top speed. Take-off from and landing on the ground. |

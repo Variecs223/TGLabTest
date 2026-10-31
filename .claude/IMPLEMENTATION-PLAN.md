@@ -53,19 +53,20 @@ read at the start of the next prompt, and errors are fixed before moving on.
 - [x] Verify `IFixedTickable` inside the GameObjectContext is driven each fixed step — yes, via `DefaultGameObjectKernel`
 - [x] `HelicopterCamera` — basic follow
 - [x] `TelemetryOverlay` — minimal IMGUI readout
-- [ ] Compile confirmed in Unity **(you)**
+- [x] Compile confirmed in Unity **(you)**
 
 ## 6. Scene and prefab **(you, to spec)**
 
 - [x] Spec handed over
-- [ ] Helicopter prefab — GameObjectContext + `HelicopterInstaller` (config, Rigidbody), Rigidbody, placeholder mesh, hull collider
-- [ ] Scene — SceneContext + `FlightSceneInstaller`, camera with `HelicopterCamera`, `TelemetryOverlay`
+- [x] Helicopter prefab — GameObjectContext + `HelicopterInstaller` (config, Rigidbody), Rigidbody, placeholder mesh, hull collider
+- [x] Scene — SceneContext + `FlightSceneInstaller`, camera with `HelicopterCamera`, `TelemetryOverlay`, terrain with collider
 
 ## 7. Flight milestones
 
 Acceptance checks are in `GAME-DESIGN.md` → *Milestones*.
 
-- [ ] Milestone 1 — vertical only (all rotations frozen)
+- [x] Milestone 1 — vertical only (all rotations frozen). Fix along the way: rotor torque now from momentum-theory power instead of blade pitch (overpitched at full collective before)
+- [ ] Rightward drift from tail rotor translating tendency — revisit in milestone 3 (see `PROJECT-NOTES.md` → *Current state*)
 - [ ] Milestone 2 — yaw (Y rotation unfrozen)
 - [ ] Milestone 3 — full six degrees of freedom
 - [ ] Milestone 4 — fuselage drag and skids

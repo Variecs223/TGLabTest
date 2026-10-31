@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace TGLabTest.Simulation
 {
     public sealed class RotorParameters
@@ -5,7 +7,8 @@ namespace TGLabTest.Simulation
         public float ThrustCoefficient { get; }
         public float AxialDamping { get; }
         public float BaseTorqueCoefficient { get; }
-        public float PitchTorqueCoefficient { get; }
+        public float HoverInducedVelocity { get; }
+        public float HoverThrust { get; }
         public float MinPitch { get; }
         public float NeutralPitch { get; }
         public float MaxPitch { get; }
@@ -18,7 +21,8 @@ namespace TGLabTest.Simulation
             float thrustCoefficient,
             float axialDamping,
             float baseTorqueCoefficient,
-            float pitchTorqueCoefficient,
+            float hoverInducedVelocity,
+            float nominalRotorSpeed,
             float minPitch,
             float neutralPitch,
             float maxPitch,
@@ -30,7 +34,7 @@ namespace TGLabTest.Simulation
             ThrustCoefficient = thrustCoefficient;
             AxialDamping = axialDamping;
             BaseTorqueCoefficient = baseTorqueCoefficient;
-            PitchTorqueCoefficient = pitchTorqueCoefficient;
+            HoverInducedVelocity = hoverInducedVelocity;
             MinPitch = minPitch;
             NeutralPitch = neutralPitch;
             MaxPitch = maxPitch;
@@ -38,12 +42,32 @@ namespace TGLabTest.Simulation
             MaxTiltLateral = maxTiltLateral;
             DiskLag = diskLag;
             HubStiffness = hubStiffness;
+            HoverThrust = Mathf.Abs(Thrust(nominalRotorSpeed, neutralPitch, 0f));
         }
 
         public float Thrust(float rotorSpeed, float pitch, float axialVelocity) =>
             ThrustCoefficient * rotorSpeed * rotorSpeed * pitch - AxialDamping * rotorSpeed * axialVelocity;
 
-        public float DragTorque(float rotorSpeed, float pitch) =>
-            rotorSpeed * rotorSpeed * (BaseTorqueCoefficient + PitchTorqueCoefficient * pitch * pitch);
+        public float DragTorque(float rotorSpeed, float thrust, float axialVelocity)
+        {
+            float baseTorque = BaseTorqueCoefficient * rotorSpeed * rotorSpeed;
+
+            if (rotorSpeed <= 0f)
+            {
+                return baseTorque;
+            }
+
+            return baseTorque + ThrustPower(thrust, axialVelocity) / rotorSpeed;
+        }
+
+        private float ThrustPower(float thrust, float axialVelocity)
+        {
+            float thrustMagnitude = Mathf.Abs(thrust);
+            float halfInflow = 0.5f * (thrust >= 0f ? axialVelocity : -axialVelocity);
+            float hoverVelocitySquared = HoverInducedVelocity * HoverInducedVelocity * thrustMagnitude / HoverThrust;
+            float inducedVelocity = Mathf.Sqrt(halfInflow * halfInflow + hoverVelocitySquared) - halfInflow;
+
+            return thrustMagnitude * (inducedVelocity + 2f * halfInflow);
+        }
     }
 }
