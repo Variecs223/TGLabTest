@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HelicopterConfig
   m_EditorClassIdentifier: TGLabTest.Simulation::TGLabTest.Simulation.HelicopterConfig
   _mass: 4300
-  _inertia: {x: 24700, y: 21000, z: 3750}
+  _inertia: {x: 24700, y: 21000, z: 6500}
   _centerOfMass: {x: 0, y: 1.4, z: 0}
   _mainHubOffset: {x: 0, y: 1.8, z: 0}
   _tailHubOffset: {x: 0, y: 1, z: -8.6}
@@ -51,6 +51,7 @@ MonoBehaviour:
   _skidDamping: 18000
   _skidSuspensionLength: 0.3
   _skidFrictionCoefficient: 0.6
+  _skidFrictionStiffness: 200000
   _skidFrictionDamping: 20000
   _thrustCoefficient:
     _enabled: 0
@@ -61,19 +62,22 @@ MonoBehaviour:
   _baseTorqueCoefficient:
     _enabled: 0
     _value: 0
-  _pitchTorqueCoefficient:
+  _hoverInducedVelocity:
+    _enabled: 0
+    _value: 0
+  _lateralRigging:
     _enabled: 0
     _value: 0
   _tailThrustCoefficient:
     _enabled: 0
     _value: 0
   _tailAxialDamping:
-    _enabled: 0
-    _value: 0
+    _enabled: 1
+    _value: 0.924
   _tailBaseTorqueCoefficient:
     _enabled: 0
     _value: 0
-  _tailPitchTorqueCoefficient:
+  _tailHoverInducedVelocity:
     _enabled: 0
     _value: 0
   _engineTorqueRate:

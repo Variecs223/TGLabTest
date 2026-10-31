@@ -11,6 +11,7 @@ namespace TGLabTest.Simulation
         public readonly float AxialDamping;
         public readonly float BaseTorqueCoefficient;
         public readonly float HoverInducedVelocity;
+        public readonly float LateralRigging;
         public readonly float TailThrustCoefficient;
         public readonly float TailAxialDamping;
         public readonly float TailBaseTorqueCoefficient;
@@ -23,6 +24,7 @@ namespace TGLabTest.Simulation
             float axialDamping,
             float baseTorqueCoefficient,
             float hoverInducedVelocity,
+            float lateralRigging,
             float tailThrustCoefficient,
             float tailAxialDamping,
             float tailBaseTorqueCoefficient,
@@ -34,6 +36,7 @@ namespace TGLabTest.Simulation
             AxialDamping = axialDamping;
             BaseTorqueCoefficient = baseTorqueCoefficient;
             HoverInducedVelocity = hoverInducedVelocity;
+            LateralRigging = lateralRigging;
             TailThrustCoefficient = tailThrustCoefficient;
             TailAxialDamping = tailAxialDamping;
             TailBaseTorqueCoefficient = tailBaseTorqueCoefficient;
@@ -65,6 +68,8 @@ namespace TGLabTest.Simulation
                 axialDamping: thrustCoefficient * rotorSpeed * (config.MaxCollectivePitch - hoverPitch) / config.MaxClimbRate,
                 baseTorqueCoefficient: BaseTorqueShare * hoverTorque / (rotorSpeed * rotorSpeed),
                 hoverInducedVelocity: InducedPowerShare * config.HoverPower / hoverThrust,
+                lateralRigging: (int)config.SpinDirection * tailHoverThrust * config.TailHubOffset.y
+                                / (hoverThrust * config.MainHubOffset.y),
                 tailThrustCoefficient: tailThrustCoefficient,
                 tailAxialDamping: tailThrustCoefficient * tailRotorSpeed * (config.MaxTailPitch - tailPitch) / (config.MaxYawRate * tailArm),
                 tailBaseTorqueCoefficient: BaseTorqueShare * tailHoverTorque / (tailRotorSpeed * tailRotorSpeed),
@@ -84,6 +89,7 @@ namespace TGLabTest.Simulation
                 axialDamping: config.AxialDampingOverride.Resolve(AxialDamping),
                 baseTorqueCoefficient: config.BaseTorqueCoefficientOverride.Resolve(BaseTorqueCoefficient),
                 hoverInducedVelocity: config.HoverInducedVelocityOverride.Resolve(HoverInducedVelocity),
+                lateralRigging: config.LateralRiggingOverride.Resolve(LateralRigging),
                 tailThrustCoefficient: config.TailThrustCoefficientOverride.Resolve(TailThrustCoefficient),
                 tailAxialDamping: config.TailAxialDampingOverride.Resolve(TailAxialDamping),
                 tailBaseTorqueCoefficient: config.TailBaseTorqueCoefficientOverride.Resolve(TailBaseTorqueCoefficient),

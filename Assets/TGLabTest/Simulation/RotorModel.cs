@@ -37,7 +37,7 @@ namespace TGLabTest.Simulation
         {
             Vector3 target = (sample.ShaftUp
                               + sample.ShaftForward * (cyclicLongitudinal * _parameters.MaxTiltLongitudinal)
-                              + sample.ShaftRight * (cyclicLateral * _parameters.MaxTiltLateral)).normalized;
+                              + sample.ShaftRight * (cyclicLateral * _parameters.MaxTiltLateral + _parameters.LateralRigging)).normalized;
 
             DiskNormal = _parameters.DiskLag > 0f
                 ? Vector3.Slerp(DiskNormal, target, 1f - Mathf.Exp(-deltaTime / _parameters.DiskLag))

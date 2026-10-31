@@ -12,7 +12,7 @@ namespace TGLabTest.Simulation
 
         [Header("Body")]
         [SerializeField, Min(1f)] private float _mass = 4300f;
-        [SerializeField] private Vector3 _inertia = new Vector3(24700f, 21000f, 3750f);
+        [SerializeField] private Vector3 _inertia = new Vector3(24700f, 21000f, 6500f);
         [SerializeField] private Vector3 _centerOfMass = new Vector3(0f, 1.4f, 0f);
 
         [Header("Geometry, relative to the centre of mass")]
@@ -74,6 +74,7 @@ namespace TGLabTest.Simulation
         [SerializeField] private CoefficientOverride _axialDamping;
         [SerializeField] private CoefficientOverride _baseTorqueCoefficient;
         [SerializeField] private CoefficientOverride _hoverInducedVelocity;
+        [SerializeField] private CoefficientOverride _lateralRigging;
         [SerializeField] private CoefficientOverride _tailThrustCoefficient;
         [SerializeField] private CoefficientOverride _tailAxialDamping;
         [SerializeField] private CoefficientOverride _tailBaseTorqueCoefficient;
@@ -132,6 +133,7 @@ namespace TGLabTest.Simulation
         public CoefficientOverride AxialDampingOverride => _axialDamping;
         public CoefficientOverride BaseTorqueCoefficientOverride => _baseTorqueCoefficient;
         public CoefficientOverride HoverInducedVelocityOverride => _hoverInducedVelocity;
+        public CoefficientOverride LateralRiggingOverride => _lateralRigging;
         public CoefficientOverride TailThrustCoefficientOverride => _tailThrustCoefficient;
         public CoefficientOverride TailAxialDampingOverride => _tailAxialDamping;
         public CoefficientOverride TailBaseTorqueCoefficientOverride => _tailBaseTorqueCoefficient;

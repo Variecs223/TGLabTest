@@ -47,6 +47,7 @@ namespace TGLabTest.Simulation
                 maxPitch: config.MaxCollectivePitch,
                 maxTiltLongitudinal: config.MaxTiltLongitudinal,
                 maxTiltLateral: config.MaxTiltLateral,
+                lateralRigging: coefficients.LateralRigging,
                 diskLag: config.DiskLag,
                 hubStiffness: config.HubStiffness);
 
@@ -61,6 +62,7 @@ namespace TGLabTest.Simulation
                 maxPitch: config.MaxTailPitch,
                 maxTiltLongitudinal: 0f,
                 maxTiltLateral: 0f,
+                lateralRigging: 0f,
                 diskLag: 0f,
                 hubStiffness: 0f);
 
