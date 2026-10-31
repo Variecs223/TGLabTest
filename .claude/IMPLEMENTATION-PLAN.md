@@ -11,23 +11,24 @@ read at the start of the next prompt, and errors are fixed before moving on.
 ## 1. Foundation
 
 - [x] Fixed timestep 0.01 s **(you)**
-- [ ] Folders `Assets/TGLabTest/Simulation/`, `Gameplay/`, `EditorTools/`
-- [ ] `TGLabTest.Simulation.asmdef` — references `UnityEngine` only
-- [ ] `TGLabTest.Gameplay.asmdef` — references Simulation, Zenject, Input System, UniTask
-- [ ] `TGLabTest.EditorTools.asmdef` — Editor platform only; references Simulation
+- [x] Folders `Assets/TGLabTest/Simulation/`, `Gameplay/`, `EditorTools/`
+- [x] `TGLabTest.Simulation.asmdef` — references `UnityEngine` only
+- [x] `TGLabTest.Gameplay.asmdef` — references Simulation, Zenject, Input System, UniTask
+- [x] `TGLabTest.EditorTools.asmdef` — Editor platform only; references Simulation
 - [ ] Delete `Assets/InputSystem_Actions.inputactions` in the Editor **(you)**
 
 ## 2. Simulation core (`TGLabTest.Simulation`)
 
-- [ ] `ControlPositions` — collective, cyclic lateral/longitudinal, pedals
-- [ ] Body-sample struct — point velocities and axes the models need
-- [ ] `HelicopterState` / `IHelicopterState`
-- [ ] `HelicopterConfig` — mass, inertia, geometry, ranges, tuning targets, per-coefficient overrides; degrees in the inspector
-- [ ] `HelicopterParameters` — derivation table from `PROJECT-NOTES.md`, then overrides
-- [ ] `RotorModel` — thrust, drag torque, disk normal with lag (main and tail)
-- [ ] `Drivetrain` — governor, spool-limited engine torque, power limit, `Ω` and `Ω̇`
-- [ ] `FuselageAero` — per-axis drag at the centre of pressure
-- [ ] `IGroundProbe`, `SkidGear` — spring-damper contacts with friction
+- [x] `ControlPositions` — collective, cyclic lateral/longitudinal, pedals
+- [x] Body samples — `RotorSample`, `SkidContactSample`; outputs `SkidContactForce`, `GroundHit`
+- [x] `HelicopterState` / `IHelicopterState`
+- [x] `HelicopterConfig` — mass, inertia, geometry, ranges, tuning targets, per-coefficient overrides; degrees in the inspector
+- [x] `HelicopterCoefficients` (derivation, overrides) and `HelicopterParameters` with per-part `RotorParameters`, `DrivetrainParameters`, `FuselageParameters`, `SkidGearParameters`
+- [x] `RotorModel` — thrust, drag torque, disk normal with lag (main and tail)
+- [x] `Drivetrain` — governor, spool-limited engine torque, power limit, `Ω`, `Ω̇`, shaft torque
+- [x] `FuselageAero` — per-axis drag at the centre of pressure, optional angular damping
+- [x] `IGroundProbe`, `SkidGear` — spring-damper contacts with friction
+- [ ] Compile confirmed in Unity **(you)**
 
 ## 3. Config inspector (`TGLabTest.EditorTools`)
 
