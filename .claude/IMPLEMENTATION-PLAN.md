@@ -73,8 +73,8 @@ Acceptance checks are in `GAME-DESIGN.md` → *Milestones*.
 
 ## 8. Presentation and tuning
 
-- [ ] `RotorVisual` — spin, disk tilt, blur disk
-- [ ] Camera polish
+- [~] `RotorVisual` — spin and disk tilt; blur disk dropped (blades only, HDRP motion blur to try). Code written; prefab wiring and eye test **(you)**
+- [x] ~~Camera polish~~ — current camera accepted
 - [ ] Milestone 5 — tuning against the targets **(you, mostly)**
 
 ## 9. Close-out

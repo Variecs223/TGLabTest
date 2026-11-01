@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7876402123984868274}
   - component: {fileID: 4769650837106241315}
   - component: {fileID: 8168305635917751976}
+  - component: {fileID: 3191470642972314495}
   m_Layer: 0
   m_Name: Helicopter
   m_TagString: Untagged
@@ -117,6 +118,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.4, y: 2, z: 5}
   m_Center: {x: 0, y: 1.5, z: 0.5}
+--- !u!114 &3191470642972314495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5211632305224615836}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5115b63e360381044b815f92b0806af4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TGLabTest.Gameplay::TGLabTest.Gameplay.Presentation.RotorVisual
+  _mainRotor:
+    _transform: {fileID: 1128818553598449491}
+    _localAxis: {x: 0, y: 1, z: 0}
+  _tailRotor:
+    _transform: {fileID: 1411158045487725374}
+    _localAxis: {x: 1, y: 0, z: 0}
 --- !u!1001 &960663167282855693
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -190,5 +209,15 @@ PrefabInstance:
 --- !u!4 &783150740214339814 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8bbf6e059721b904d9a0ae7eb8cc1073, type: 3}
+  m_PrefabInstance: {fileID: 960663167282855693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1128818553598449491 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 215795039566637150, guid: 8bbf6e059721b904d9a0ae7eb8cc1073, type: 3}
+  m_PrefabInstance: {fileID: 960663167282855693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1411158045487725374 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -7007171336266529741, guid: 8bbf6e059721b904d9a0ae7eb8cc1073, type: 3}
   m_PrefabInstance: {fileID: 960663167282855693}
   m_PrefabAsset: {fileID: 0}

@@ -86,7 +86,7 @@ namespace TGLabTest.Gameplay.Helicopter
 
             ApplyFuselageForces(frame);
             ApplySkidForces(frame);
-            WriteState(controls, mainRotorPitch, tailRotorPitch);
+            WriteState(frame, controls, mainRotorPitch, tailRotorPitch);
         }
 
         private void ApplyFuselageForces(in BodyFrame frame)
@@ -116,7 +116,7 @@ namespace TGLabTest.Gameplay.Helicopter
             }
         }
 
-        private void WriteState(in ControlPositions controls, float mainRotorPitch, float tailRotorPitch)
+        private void WriteState(in BodyFrame frame, in ControlPositions controls, float mainRotorPitch, float tailRotorPitch)
         {
             _state.Controls = controls;
             _state.MainRotorPitch = mainRotorPitch;
@@ -124,6 +124,7 @@ namespace TGLabTest.Gameplay.Helicopter
             _state.RotorSpeed = _drivetrain.RotorSpeed;
             _state.RotorSpeedRatio = _drivetrain.RotorSpeedRatio;
             _state.DiskNormal = _mainRotor.DiskNormal;
+            _state.LocalDiskNormal = frame.ToLocal(_mainRotor.DiskNormal);
             _state.MainRotorThrust = _mainRotor.Thrust;
             _state.MainRotorDrag = _mainRotor.DragTorque;
             _state.TailRotorThrust = _tailRotor.Thrust;

@@ -10,6 +10,7 @@ namespace TGLabTest.Simulation
         float RotorSpeed { get; }
         float RotorSpeedRatio { get; }
         Vector3 DiskNormal { get; }
+        Vector3 LocalDiskNormal { get; }
         float MainRotorThrust { get; }
         float MainRotorDrag { get; }
         float TailRotorThrust { get; }

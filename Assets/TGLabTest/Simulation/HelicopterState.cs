@@ -10,6 +10,7 @@ namespace TGLabTest.Simulation
         public float RotorSpeed { get; set; }
         public float RotorSpeedRatio { get; set; }
         public Vector3 DiskNormal { get; set; } = Vector3.up;
+        public Vector3 LocalDiskNormal { get; set; } = Vector3.up;
         public float MainRotorThrust { get; set; }
         public float MainRotorDrag { get; set; }
         public float TailRotorThrust { get; set; }
