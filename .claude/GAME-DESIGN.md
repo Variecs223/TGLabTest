@@ -11,13 +11,13 @@ Equations, constants and tuning live in `PROJECT-NOTES.md`; code structure lives
 
 ## Concept
 
-**In progress** — flyable; visuals and the location are missing. A realistic helicopter flight simulator. The player flies a single helicopter around
+**In progress** — flyable with rotor visuals; the location is missing. A realistic helicopter flight simulator. The player flies a single helicopter around
 one location, seen from a third-person camera. There are no missions, objectives or scoring — the
 experience is the flying itself.
 
 ### End goal
 
-**In progress** — the handling reads as a helicopter at low speed; final tuning comes with milestone 5. The helicopter must **feel** like a real one and be **hard to fly** in the same ways a
+**Complete** — the handling reads as a helicopter at low speed and was accepted after milestone 5 tuning. Holding a cyclic key from a hover still pitches the aircraft over, as full cyclic would in a real one. The helicopter must **feel** like a real one and be **hard to fly** in the same ways a
 real one is. A 1:1 match of real-world physics is not the goal: in-depth aerodynamics is
 deliberately left out (see *Scope*), and the remaining model is tuned so the handling still reads
 as authentic.
@@ -32,8 +32,8 @@ The difficulty must come from the physics, never from scripted behaviour:
 | Item | Status | Description |
 |---|---|---|
 | Location | Planned | A single simple outdoor location to take off from, fly around and land in. Built later. |
-| Helicopter | In progress — placeholder model, no rotor visuals yet | One aircraft with a simple visual model. Medium utility helicopter in the UH-1 class: two-blade main rotor turning counterclockwise seen from above, tail rotor on the left of the tail boom, skid landing gear. |
-| Camera | In progress — basic heading-follow camera, polish pending | Third-person view following the helicopter. |
+| Helicopter | Complete | One aircraft with a simple visual model. Medium utility helicopter in the UH-1 class: two-blade main rotor turning counterclockwise seen from above, tail rotor on the left of the tail boom, skid landing gear. The rotors spin at the simulated speed and the main rotor visibly tilts with the disk. |
+| Camera | Complete | Third-person view following the helicopter's heading. |
 | HUD | Planned (not now) | No HUD in the current scope. A developer telemetry overlay is built for testing and tuning, but it is not part of the player experience. |
 
 ## Flight model
@@ -51,6 +51,7 @@ The model simulates these parts:
 | Tail rotor | Complete | The same model, smaller, geared to the main rotor. Its thrust opposes the main rotor's torque reaction. Its response to the fuselage swinging provides yaw damping. |
 | Engine and governor | Complete | Delivers torque to the rotors to hold a target rotor speed. Its output is limited in both maximum power and how fast it can change, so heavy loads droop rotor RPM until it catches up. Fuel is infinite. |
 | Fuselage | Complete | Air drag on all three axes, acting slightly behind the centre of mass, so the helicopter limits its own top speed and tends to weathervane into its direction of travel. |
+| Horizontal stabilizer | Complete | A small wing on the tail boom. In forward flight it pushes the tail down when the nose drops and resists pitching, so a moving helicopter settles at a steady attitude and the slow swing dies out. No effect in a hover. |
 | Landing gear | Complete | Four spring-damped contact points on the skids with ground friction, allowing take-off, landing and sitting on the ground. |
 
 ## Controls
@@ -69,6 +70,9 @@ device (joystick, gamepad) should drive absolute positions instead.
 | W / S | Cyclic, fore/aft | Ramps toward full deflection while held, returns to centre when released. | Tilts the main rotor disk forward or back. | The tilted thrust pitches the nose down (W) or up (S), and the helicopter accelerates in that direction. |
 | A / D | Cyclic, left/right | Same as W / S. | Tilts the main rotor disk left or right. | The helicopter rolls and slides toward that side. |
 | Q / E | Pedals | Ramp toward full deflection while held, return to centre when released. Centred pedals balance the torque of a steady hover. | Pitch of the tail rotor blades. | The nose yaws left (Q) or right (E). |
+
+Two session keys sit outside the flight controls: **R** restarts the simulation and **Esc** quits.
+Both are listed on screen, since they aren't part of a helicopter's controls.
 
 ### Control coupling
 
@@ -98,10 +102,13 @@ The flight model and controls above, the third-person camera, one helicopter and
 
 - **Fuel** — infinite, mass is constant.
 - **Engine on/off** — the engine always runs at the governed flight rotor speed.
-- **Extra controls** such as force trim — the simulator uses the keys above and nothing else.
+- **Extra flight controls** such as force trim — the simulator flies on the keys above and nothing
+  else.
 - **Detailed aerodynamics** — full inflow modelling (only a vertical momentum-theory estimate of
   rotor power is used), translational lift, ground effect, vortex ring state, retreating blade
-  stall. Flapback is in, but as a single linear coefficient, not a blade model.
+  stall. Flapback is in, but as a single linear coefficient, not a blade model; the horizontal
+  stabilizer has no stall and ignores the rotor downwash.
+- **Rotor blur disk** — the blades are shown spinning, with the render pipeline's motion blur.
 - **High-speed flight tuning** — top speed is limited by fuselage drag but was not tuned or
   verified; fast flight is too hard to control on a keyboard to be a goal.
 - **Autorotation** — it depends on the inflow model above.
@@ -125,7 +132,7 @@ Each stage is accepted when its checks hold.
 | 2 | Yaw | Complete | Collective changes cause yaw that needs pedal to correct. With pedals released at hover collective, the helicopter only drifts slowly in yaw. |
 | 3 | Full six degrees of freedom | Complete | Hover is possible but needs constant small corrections. Forward cyclic drops the nose and the helicopter accelerates forward. |
 | 4 | Fuselage drag and skids | Complete | Take-off from and landing on the ground. A moving helicopter slows down again (the top-speed check was descoped). |
-| 5 | Visuals and tuning | Planned | Rotor visuals, third-person camera, simple helicopter model and location; handling tuned against the targets in `PROJECT-NOTES.md`. |
+| 5 | Visuals and tuning | Complete, except the location (planned) | Rotor visuals, third-person camera, simple helicopter model and location; handling tuned against the targets in `PROJECT-NOTES.md`. Tuning added the horizontal stabilizer and lowered the cyclic's disk tilt range. |
 
 ## Glossary
 
@@ -146,4 +153,5 @@ Each stage is accepted when its checks hold.
 - **Rigging** — a built-in offset of the cyclic, so centred controls already hold a hover.
 - **Flapback** — the rotor disk tilting away from the airflow when the helicopter moves.
 - **Phugoid** — the slow swing between speeding up and slowing down that flapback produces.
+- **Horizontal stabilizer** — small fixed wing on the tail boom giving pitch stability in forward flight.
 - **Weathervaning** — the fuselage turning to point into the airflow, like a weathervane.

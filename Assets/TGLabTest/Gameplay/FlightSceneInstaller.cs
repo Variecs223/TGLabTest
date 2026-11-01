@@ -12,6 +12,7 @@ namespace TGLabTest.Gameplay
             Container.Bind<IDisposable>().To<FlightInput>().FromResolve();
             Container.BindInterfacesTo<FlightControls>().AsSingle();
             Container.BindInterfacesAndSelfTo<ActiveHelicopter>().AsSingle();
+            Container.BindInterfacesTo<SessionControls>().AsSingle();
         }
     }
 }

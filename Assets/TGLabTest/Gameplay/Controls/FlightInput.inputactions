@@ -160,6 +160,56 @@
                     "isPartOfComposite": true
                 }
             ]
+        },
+        {
+            "name": "Session",
+            "id": "6c1f3d2a-8e4b-4f7a-9d15-2b7e9a0c4f31",
+            "actions": [
+                {
+                    "name": "Restart",
+                    "type": "Button",
+                    "id": "d4a9e2f7-3b6c-4e18-a5f0-7c2d8b1e9a46",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Quit",
+                    "type": "Button",
+                    "id": "e7b2c9d4-1a3f-4b6e-8c05-3f9d2a7b6c18",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2c8f4a6e-9d1b-4e73-a5c2-6b0e3d9f1a87",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Quit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9b3e7c1d-5f2a-4d86-b0e4-1a6c8f3d7e52",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Restart",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [

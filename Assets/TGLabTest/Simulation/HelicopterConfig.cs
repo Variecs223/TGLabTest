@@ -33,8 +33,8 @@ namespace TGLabTest.Simulation
         [SerializeField] private RotorSpinDirection _spinDirection = RotorSpinDirection.Counterclockwise;
         [SerializeField, Min(1f)] private float _nominalRotorSpeedRpm = 324f;
         [SerializeField] private Vector2 _collectivePitchRangeDegrees = new Vector2(0f, 15f);
-        [SerializeField, Min(0f)] private float _maxTiltLongitudinalDegrees = 8f;
-        [SerializeField, Min(0f)] private float _maxTiltLateralDegrees = 6f;
+        [SerializeField, Min(0f)] private float _maxTiltLongitudinalDegrees = 4f;
+        [SerializeField, Min(0f)] private float _maxTiltLateralDegrees = 3f;
         [SerializeField, Min(0f)] private float _flapbackDegreesPer10MetersPerSecond = 0.6f;
         [SerializeField, Min(0f)] private float _diskLagSeconds = 0.1f;
         [SerializeField, Min(0f)] private float _hubStiffness;

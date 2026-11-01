@@ -22,6 +22,3 @@ Open the relevant file when a task calls for it; they are not loaded automatical
   conventions and sign rules, the physics model with all equations, coefficient derivation and
   starting values, control rates, Rigidbody and Unity setup, telemetry overlay, upgrade path to
   detailed aerodynamics, pitfalls.
-- **`.claude/IMPLEMENTATION-PLAN.md`** — temporary step-by-step build plan with progress. Read it at
-  the start of implementation work; tick items off as they are completed, in the same prompt that
-  completes them. Deleted when the plan is finished.

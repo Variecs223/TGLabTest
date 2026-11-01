@@ -248,6 +248,56 @@ namespace TGLabTest.Gameplay.Controls
                     ""isPartOfComposite"": true
                 }
             ]
+        },
+        {
+            ""name"": ""Session"",
+            ""id"": ""6c1f3d2a-8e4b-4f7a-9d15-2b7e9a0c4f31"",
+            ""actions"": [
+                {
+                    ""name"": ""Restart"",
+                    ""type"": ""Button"",
+                    ""id"": ""d4a9e2f7-3b6c-4e18-a5f0-7c2d8b1e9a46"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Quit"",
+                    ""type"": ""Button"",
+                    ""id"": ""e7b2c9d4-1a3f-4b6e-8c05-3f9d2a7b6c18"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""2c8f4a6e-9d1b-4e73-a5c2-6b0e3d9f1a87"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Quit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9b3e7c1d-5f2a-4d86-b0e4-1a6c8f3d7e52"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Restart"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": [
@@ -269,11 +319,16 @@ namespace TGLabTest.Gameplay.Controls
             m_Flight_Cyclic = m_Flight.FindAction("Cyclic", throwIfNotFound: true);
             m_Flight_Collective = m_Flight.FindAction("Collective", throwIfNotFound: true);
             m_Flight_Pedals = m_Flight.FindAction("Pedals", throwIfNotFound: true);
+            // Session
+            m_Session = asset.FindActionMap("Session", throwIfNotFound: true);
+            m_Session_Restart = m_Session.FindAction("Restart", throwIfNotFound: true);
+            m_Session_Quit = m_Session.FindAction("Quit", throwIfNotFound: true);
         }
 
         ~@FlightInput()
         {
             UnityEngine.Debug.Assert(!m_Flight.enabled, "This will cause a leak and performance issues, FlightInput.Flight.Disable() has not been called.");
+            UnityEngine.Debug.Assert(!m_Session.enabled, "This will cause a leak and performance issues, FlightInput.Session.Disable() has not been called.");
         }
 
         /// <summary>
@@ -463,6 +518,113 @@ namespace TGLabTest.Gameplay.Controls
         /// Provides a new <see cref="FlightActions" /> instance referencing this action map.
         /// </summary>
         public FlightActions @Flight => new FlightActions(this);
+
+        // Session
+        private readonly InputActionMap m_Session;
+        private List<ISessionActions> m_SessionActionsCallbackInterfaces = new List<ISessionActions>();
+        private readonly InputAction m_Session_Restart;
+        private readonly InputAction m_Session_Quit;
+        /// <summary>
+        /// Provides access to input actions defined in input action map "Session".
+        /// </summary>
+        public struct SessionActions
+        {
+            private @FlightInput m_Wrapper;
+
+            /// <summary>
+            /// Construct a new instance of the input action map wrapper class.
+            /// </summary>
+            public SessionActions(@FlightInput wrapper) { m_Wrapper = wrapper; }
+            /// <summary>
+            /// Provides access to the underlying input action "Session/Restart".
+            /// </summary>
+            public InputAction @Restart => m_Wrapper.m_Session_Restart;
+            /// <summary>
+            /// Provides access to the underlying input action "Session/Quit".
+            /// </summary>
+            public InputAction @Quit => m_Wrapper.m_Session_Quit;
+            /// <summary>
+            /// Provides access to the underlying input action map instance.
+            /// </summary>
+            public InputActionMap Get() { return m_Wrapper.m_Session; }
+            /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+            public void Enable() { Get().Enable(); }
+            /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+            public void Disable() { Get().Disable(); }
+            /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+            public bool enabled => Get().enabled;
+            /// <summary>
+            /// Implicitly converts an <see ref="SessionActions" /> to an <see ref="InputActionMap" /> instance.
+            /// </summary>
+            public static implicit operator InputActionMap(SessionActions set) { return set.Get(); }
+            /// <summary>
+            /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+            /// </summary>
+            /// <param name="instance">Callback instance.</param>
+            /// <remarks>
+            /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+            /// </remarks>
+            /// <seealso cref="SessionActions" />
+            public void AddCallbacks(ISessionActions instance)
+            {
+                if (instance == null || m_Wrapper.m_SessionActionsCallbackInterfaces.Contains(instance)) return;
+                m_Wrapper.m_SessionActionsCallbackInterfaces.Add(instance);
+                @Restart.started += instance.OnRestart;
+                @Restart.performed += instance.OnRestart;
+                @Restart.canceled += instance.OnRestart;
+                @Quit.started += instance.OnQuit;
+                @Quit.performed += instance.OnQuit;
+                @Quit.canceled += instance.OnQuit;
+            }
+
+            /// <summary>
+            /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+            /// </summary>
+            /// <remarks>
+            /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+            /// </remarks>
+            /// <seealso cref="SessionActions" />
+            private void UnregisterCallbacks(ISessionActions instance)
+            {
+                @Restart.started -= instance.OnRestart;
+                @Restart.performed -= instance.OnRestart;
+                @Restart.canceled -= instance.OnRestart;
+                @Quit.started -= instance.OnQuit;
+                @Quit.performed -= instance.OnQuit;
+                @Quit.canceled -= instance.OnQuit;
+            }
+
+            /// <summary>
+            /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="SessionActions.UnregisterCallbacks(ISessionActions)" />.
+            /// </summary>
+            /// <seealso cref="SessionActions.UnregisterCallbacks(ISessionActions)" />
+            public void RemoveCallbacks(ISessionActions instance)
+            {
+                if (m_Wrapper.m_SessionActionsCallbackInterfaces.Remove(instance))
+                    UnregisterCallbacks(instance);
+            }
+
+            /// <summary>
+            /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+            /// </summary>
+            /// <remarks>
+            /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+            /// </remarks>
+            /// <seealso cref="SessionActions.AddCallbacks(ISessionActions)" />
+            /// <seealso cref="SessionActions.RemoveCallbacks(ISessionActions)" />
+            /// <seealso cref="SessionActions.UnregisterCallbacks(ISessionActions)" />
+            public void SetCallbacks(ISessionActions instance)
+            {
+                foreach (var item in m_Wrapper.m_SessionActionsCallbackInterfaces)
+                    UnregisterCallbacks(item);
+                m_Wrapper.m_SessionActionsCallbackInterfaces.Clear();
+                AddCallbacks(instance);
+            }
+        }
+        /// <summary>
+        /// Provides a new <see cref="SessionActions" /> instance referencing this action map.
+        /// </summary>
+        public SessionActions @Session => new SessionActions(this);
         private int m_KeyboardSchemeIndex = -1;
         /// <summary>
         /// Provides access to the input control scheme.
@@ -504,6 +666,28 @@ namespace TGLabTest.Gameplay.Controls
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnPedals(InputAction.CallbackContext context);
+        }
+        /// <summary>
+        /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Session" which allows adding and removing callbacks.
+        /// </summary>
+        /// <seealso cref="SessionActions.AddCallbacks(ISessionActions)" />
+        /// <seealso cref="SessionActions.RemoveCallbacks(ISessionActions)" />
+        public interface ISessionActions
+        {
+            /// <summary>
+            /// Method invoked when associated input action "Restart" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnRestart(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "Quit" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnQuit(InputAction.CallbackContext context);
         }
     }
 }

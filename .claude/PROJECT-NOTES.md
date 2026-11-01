@@ -5,18 +5,24 @@ Implementation specifics for the helicopter simulator. Structure and component r
 
 ## Current state
 
-The full flight model flies in six degrees of freedom: simulation core, config inspector, controls,
-gameplay wiring, telemetry overlay, a placeholder helicopter prefab and a test scene with a terrain
-collider. Milestones 1–4 pass: hover at mid collective, steady ~9 m/s climb with rotor speed held,
-RPM droop and recovery, collective-to-yaw coupling, a hover that needs constant small corrections,
-take-off and landing on the skids. At low speed with careful taps the helicopter is controllable.
-High-speed flight was descoped from testing — too hard to control on a keyboard. Not built yet:
-`RotorVisual`, camera polish, the real location. Implementation progress is tracked step by step
-in `IMPLEMENTATION-PLAN.md`.
+The build-out is finished. The full flight model flies in six degrees of freedom: simulation core,
+config inspector, controls, gameplay wiring, rotor visuals, telemetry overlay, restart (R) and quit
+(Esc), the helicopter prefab with the HeloMarine model, and a test scene with a terrain collider.
+All five milestones pass: hover at mid collective, steady ~9 m/s climb with rotor speed held, RPM
+droop and recovery, collective-to-yaw coupling, a hover that needs constant small corrections,
+take-off and landing on the skids, and tuned handling. At low speed with careful taps the
+helicopter is controllable; holding a cyclic key still pitches it over before the stabilizer can
+catch it. High-speed flight was descoped from testing — too hard to control on a keyboard.
 
-**Config asset deviates from the derivation:** the UH-1 asset has the `kvt` override enabled at
-0.924 (40 % of the derived 2.309), which felt better — less yaw upset from sideways motion. Not yet
-folded into the derivation; see *Derivation* → yaw damping split.
+**Open items**
+- **`kvt` override.** The UH-1 asset has the `kvt` override enabled at 0.924 (40 % of the derived
+  2.309), which felt better — less yaw upset from sideways motion. Not folded into the derivation;
+  see *Derivation* → yaw damping split.
+- **Flapback 1.0° per 10 m/s** (closer to a textbook UH-1 estimate) is untried; it would stiffen
+  speed stability and shorten the phugoid. Fuselage `AngularDamping` is the remaining keyboard
+  concession if holding a key must stop flipping the aircraft from a hover.
+- **Location** — the real location is still to be built.
+- **`Pmax`** — see *Derivation* → climb rate vs. power.
 
 ## Project setup
 
@@ -107,8 +113,11 @@ helicopter oscillates uncontrollably.
 
 - **Cyclic commands rotation rate, not attitude.** A tilt of the disk relative to the mast moves the
   thrust line off the centre of mass, so the fuselage rotates until the disk lines up with the mast
-  again. Holding W keeps pitching the nose down (up to ~80°/s) and flips the helicopter; releasing
-  it leaves the attitude where it is. That is how a teetering rotor behaves.
+  again. Releasing the cyclic leaves the attitude where it is. That is how a teetering rotor
+  behaves, and a real one also pitches over under held full cyclic. The steady rate is
+  `(cy·maxTiltLon − Kfb·vPlane)/τ`: with the 4° limit, up to ~40°/s at low speed. A held key flies
+  forward only once flapback and the horizontal stabilizer (see *Fuselage drag*) catch the rotation,
+  which needs airspeed.
 - **`rig` — lateral rigging.** A constant disk tilt with the cyclic centred, derived so that a hover
   needs no lateral cyclic (see *Derivation*). It cancels the roll moment of the tail rotor thrust,
   which acts above the CG. The sideways force of the tail rotor is then cancelled by the whole
@@ -121,9 +130,10 @@ helicopter oscillates uncontrollably.
   Climb and descent are excluded (`vPlane` lies in the disk plane); they are handled by `kv`.
 - **Phugoid.** Flapback turns speed into nose-up pitch, pitch into deceleration, deceleration into
   nose-down pitch: a slow oscillation, period `≈ 2π / √(Kfb·W·h·g / D)` ≈ 20 s, with `h` the hub
-  height above the CG and `D = W·h·τ` the pitch damping from disk lag. Roughly neutral in this
-  model — neither dies out nor grows much. The nose overshoots level while the aircraft is still
-  moving; the pilot damps it by correcting ahead of the swing, as with a real hover.
+  height above the CG and `D = W·h·τ` the pitch damping from disk lag. Roughly neutral from the
+  rotor alone; the horizontal stabilizer damps it in pitch at speed. The nose overshoots level while
+  the aircraft is still moving; the pilot damps it by correcting ahead of the swing, as with a real
+  hover. Roll has no stabilizer, so a sideways slide still swings lightly damped.
 - Lateral flapping in forward flight (from blade coning) is not modelled.
 
 **Hub moment** `M = Kβ·Cross(shaftUp, n)` — 0 for a two-blade teetering rotor like the UH-1. Kept
@@ -207,7 +217,24 @@ Flocal = −0.5·ρ·Scale(fAreas, Scale(vLocal, Abs(vLocal)))     // fAreas = p
 
 Applied at a centre of pressure slightly **behind** the CG, which gives a cheap weathervane effect.
 Without drag the helicopter accelerates horizontally forever. Optional extra angular damping
-`−kω ⊙ angularVelocity` per body axis — keep small, use only if disk lag alone is not enough.
+`−kω ⊙ angularVelocity` per body axis — 0 on the asset; it has no real-world basis at the values
+that would stop a held key from flipping the aircraft, so it is a keyboard concession if used.
+
+**Horizontal stabilizer** — the small wing on the tail boom:
+```
+vLocal = transform.InverseTransformDirection(rb.GetPointVelocity(stabilizerPos))
+Fup    = −0.5·ρ·a·S·vLocal.y·|vLocal.z|           // along body up, applied at the stabilizer
+```
+- `a` — lift slope, lift per radian of airflow angle (~3.5 for a short wing); `S` — area (2 m²).
+- `vLocal.y` is the airflow across the wing, `vLocal.z` along it. Flying forward nose-down tilts
+  the body up axis into the flight path, so the tail is pushed down and the nose lifted: pitch
+  stability. Because the velocity is sampled at the tail, pitch rotation also feeds `vLocal.y` and
+  is resisted: pitch damping (∝ `S·arm²·speed`). Zero in a hover, growing with airspeed.
+- `y·|z|` equals `V²·sinα·cosα`, the textbook lift with the airflow angle `α`, so the force stays
+  bounded at large angles (peaks at 45°). No stall and no rotor downwash on the stabilizer —
+  detailed aerodynamics.
+- Area 0 turns it off. In a 2D pitch study, it was what turned a held cyclic into a settled
+  cruise rather than an endless swing.
 
 Gravity comes from Unity (`useGravity = true`); weight is never added manually.
 
@@ -259,9 +286,11 @@ WheelColliders** for skids.
    rb.AddTorque(Kβ * Vector3.Cross(shaftUp, n));          // hub moment, 0 for teetering rotors
    rb.AddForceAtPosition(Tt * tailAxis, tailHubPos);      // anti-torque
    rb.AddForceAtPosition(fuselageDragWorld, cpPos);
+   rb.AddForceAtPosition(stabilizerForceWorld, stabilizerPos);
    // + skid contact forces
    ```
-7. Write `HelicopterState`.
+7. Write `HelicopterState`, including `LocalDiskNormal` (`n` in the body frame of this step) for
+   the rotor visual.
 
 ## Configuration and coefficients
 
@@ -273,7 +302,8 @@ manual value; `HelicopterParameters` packs the result per part (`RotorParameters
 - **Units.** Serialized fields are in inspector units — degrees, rpm, kW, % — and carry the unit in
   their name. The config's public getters return SI and radians; conversion happens only there.
 - **Geometry** lives in the config as offsets **relative to the centre of mass**: main hub, tail
-  hub, centre of pressure, skid contacts. The centre of mass itself is relative to the prefab root.
+  hub, centre of pressure, stabilizer, skid contacts. The centre of mass itself is relative to the
+  prefab root.
   `Larm = −TailHubOffset.z`. **The config is the only source of physics geometry** — forces are
   applied at these offsets, never at prefab transforms, so the derivation and the simulation can't
   disagree. Prefab transforms only place visuals; if the model and the config disagree, correct
@@ -349,7 +379,7 @@ damping ≈ 17,700 N·m·s/rad. Currently approximated on the asset by the `kvt`
 | `θmin..θmax` | 0 .. 0.26 rad (0–15°) |
 | `θtMin..θtMax` | −0.14 .. 0.35 rad (−8° .. +20°) |
 | `θtNeutral` | 8° — sets how much pedal authority lies each side of hover |
-| `maxTiltLon / maxTiltLat` | 0.14 / 0.10 rad (8° / 6°) |
+| `maxTiltLon / maxTiltLat` | 0.070 / 0.052 rad (4° / 3°) — lowered from 8° / 6° in milestone 5 so a held key is a smaller input |
 | `τ` disk lag | 0.1 s (0.08–0.12) |
 | `Kfb` flapback | 0.6° per 10 m/s (≈ 0.001 rad per m/s); lower gives a slower, gentler phugoid |
 | `Phover` / `Pmax` | ~700 kW / ~1,000 kW |
@@ -368,7 +398,8 @@ damping ≈ 17,700 N·m·s/rad. Currently approximated on the asset by the `kvt`
 | `Qfriction` | 200 N·m |
 | `Ωmin` power-limit floor | 10 % of `Ωnom` |
 | centre of mass | (0, 1.4, 0) from the prefab root |
-| main hub / tail hub / centre of pressure offsets | (0, 1.8, 0) / (0, 1, −8.6) / (0, 0, −0.5) |
+| main hub / tail hub / centre of pressure / stabilizer offsets | (0, 1.8, 0) / (0, 1, −8.6) / (0, 0, −0.5) / (0, 0, −6) |
+| stabilizer area / lift slope | 2 m² / 3.5 per rad |
 | skid contact offsets | (±1.3, −1.4, ±1.5) |
 | skid suspension length | 0.3 m |
 | skid friction `μ` / stiffness / damping | 0.6 / 2e5 N/m / 2e4 N·s/m |
@@ -382,12 +413,18 @@ damping ≈ 17,700 N·m·s/rad. Currently approximated on the asset by the `kvt`
 | Collective | Space / Left Ctrl | Holds position when released; range [0, 1] | ~0.4–0.5 /s |
 | Cyclic | W / S, A / D | Ramps toward ±1 while held, returns to 0 on release | ~3 /s both ways |
 | Pedals | Q / E | Ramps toward ±1 while held, returns to 0 on release | ~2 /s |
+| Restart / quit | R / Esc | Not flight controls; `Session` map | — |
 
 - Asset `Assets/TGLabTest/Gameplay/Controls/FlightInput.inputactions`, with **Generate C# Class**
   on (namespace `TGLabTest.Gameplay.Controls`). It generates `FlightInput.cs` next to the asset —
-  never edit that file. One `Flight` map: `Cyclic` (2D composite, WASD, `mode=2` so diagonals are
+  never edit that file. `Flight` map: `Cyclic` (2D composite, WASD, `mode=2` so diagonals are
   not normalized and each axis reaches ±1), `Collective` (1D axis, Space +, Ctrl −), `Pedals` (1D
-  axis, Q −, E +). One control scheme, `Keyboard`.
+  axis, Q −, E +). `Session` map: `Restart` (R), `Quit` (Esc). One control scheme, `Keyboard`.
+  After editing the asset, Unity regenerates the wrapper on reimport; code using a new action
+  fails to compile until it has.
+- `SessionControls` enables the `Session` map. Restart reloads the active scene by build index —
+  Zenject rebuilds both contexts, so everything resets; the scene must be in the build list. Quit
+  calls `Application.Quit()`, or leaves play mode in the Editor.
 - **Asset name ≠ `<MapName>Actions`.** The generator names each map's struct `<MapName>Actions`; an
   asset called `FlightActions` would generate a `FlightActions` struct inside a `FlightActions`
   class (CS0542). Hence `FlightInput`.
@@ -423,8 +460,21 @@ the collider is only a crash hull.
 pitch and roll are not followed, so attitude stays readable against the horizon. The heading
 follows with an exponential lag. Distance, height, look height and lag are serialized fields.
 
-**Rotors** are not Rigidbodies; they exist only as math. Meshes are spun from `Ω` and tilted to
-`n`. At high RPM a blur-disk mesh replaces the blades, since HDRP motion blur handles rotors poorly.
+**Rotors** are not Rigidbodies; they exist only as math. `RotorVisual` spins each rotor mesh in
+`Update` from `Ω` (tail: `gt·Ω`), main rotor in the `spinSign` direction, about a serialized
+local axis per rotor; the main rotor is also tilted by `LocalDiskNormal` relative to the
+interpolated body, so it doesn't jitter between physics steps. One transform per rotor, pivot at
+the hub. No blur disk: blades only, with HDRP motion blur (raise its *Maximum Velocity* for
+rotors). At 60 fps the tail rotor turns ~165° per frame and strobes. The HeloMarine FBX stores the
+rotor hubs as Maya pivots with the nodes at the model origin; Unity normally bakes the pivot into
+the transform. If a rotor orbits instead of spinning in place, it didn't — wrap the mesh in an
+empty at the hub and assign that.
+
+**Config gizmos.** With the helicopter selected, `HelicopterInstaller` draws the config's force
+points in the Scene view: centre of mass (white), main hub (yellow), tail hub and thrust direction
+(red), centre of pressure and stabilizer (cyan), skid contacts (green). The HeloMarine model is
+lined up with them by eye — rotors roughly at their hubs, not an exact match. If the model is
+replaced, line it up the same way; the config stays the source of physics geometry.
 
 **Floating origin** is not needed for a single location. It becomes necessary beyond ~5–10 km
 from the origin: HDRP camera-relative rendering fixes visual jitter but not physics precision.
@@ -432,15 +482,10 @@ from the origin: HDRP camera-relative rendering fixes visual jitter but not phys
 ## Telemetry overlay
 
 A developer tool, not part of the player experience (no HUD in the current scope). IMGUI, reading
-`IHelicopterState`. A minimal version comes with milestone 1 so the milestone checks can be read
-off it — control positions, rotor rpm and %, thrust, engine torque, power, vertical speed. Full
-contents, grown as tuning needs them:
-
-- control positions `c, cx, cy, p`; blade pitches `θ, θt`;
-- rotor speed `Ω` in rpm and % of `Ωnom`;
-- `Qeng, Q, Qt, T, Tt`, engine power;
-- vertical speed, airspeed;
-- gizmo arrows for the thrust vectors.
+`IHelicopterState`: control positions, blade pitches, rotor rpm and %, main and tail thrust,
+stabilizer force (negative pushes the tail down), engine and shaft torque, engine power, vertical
+and ground speed, ground contact. The R / Esc hints sit at the bottom of the same box, so the
+overlay is also the only place they are shown.
 
 ## Upgrade path: detailed aerodynamics
 
@@ -484,5 +529,6 @@ negative drives the rotor) without special-case code.
   possibly inside the hull. `RaycastGroundProbe` drops hits whose `rigidbody` is the helicopter's,
   so no layer setup is needed.
 - **`n` must stay in world space.** Storing it relative to the shaft removes the disk lag that
-  damps pitch and roll.
+  damps pitch and roll. Presentation uses the separate `LocalDiskNormal`; tilting a visual to the
+  world `n` would jitter against the interpolated fuselage.
 - **Overrides silently break targets** — see *Configuration and coefficients*.

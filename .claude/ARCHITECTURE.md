@@ -4,7 +4,7 @@ What the project consists of, what each part is for, and how the parts interact.
 specifics, the physics model, Unity settings and pitfalls live in `PROJECT-NOTES.md`. Intended
 behaviour lives in `GAME-DESIGN.md`.
 
-Implemented as described, except `RotorVisual`, which is still to come.
+Implemented as described.
 
 ## Overview
 
@@ -28,13 +28,15 @@ Implemented as described, except `RotorVisual`, which is still to come.
                                 ▼
                      IActiveHelicopter (scene) ──► HelicopterCamera
                                               └─► TelemetryOverlay
+
+ Input System ──► SessionControls ──► scene reload (R) / quit (Esc)
 ```
 
 The project is split into three concerns, each kept away from the others:
 - **Controls** turn player input into control positions. Only this layer knows keys exist.
 - **Simulation** turns control positions and the body's motion into forces. It is plain C# and
   knows nothing about the scene, DI or input devices.
-- **Presentation** reads the simulation's state and shows it: rotor visuals, camera, and later a
+- **Presentation** reads the simulation's state and shows it: rotor visuals, camera, and a
   developer telemetry overlay.
 
 Data flows one way: controls → simulation → state → presentation. Nothing downstream writes back
@@ -68,10 +70,10 @@ reference that would break that rule doesn't compile.
 | `RotorSample`, `SkidContactSample` | Structs | The sampled body state a model needs for one step: shaft axes and hub velocity; contact position and velocity. |
 | `RotorModel` | Plain C# | Thrust, drag torque and disk tilt (cyclic, rigging, flapback, lag) for one rotor. Two instances: main and tail. |
 | `Drivetrain` | Plain C# | Engine torque, governor and rotor speed. Takes the rotors' drag torques, integrates rotor speed. |
-| `FuselageAero` | Plain C# | Fuselage drag at the centre of pressure. |
+| `FuselageAero` | Plain C# | Fuselage drag at the centre of pressure, optional angular damping, and the horizontal stabilizer's force. |
 | `SkidGear` | Plain C# | Spring-damper contacts with friction at the skid points. Queries the ground through `IGroundProbe`. |
 | `IGroundProbe` | Interface | Ground query (raycast) used by `SkidGear`, so the gear model needs no scene access of its own. |
-| `HelicopterState` / `IHelicopterState` | Plain C# / read interface | Snapshot of the last simulation step: control positions, blade pitches, rotor speed, disk normal, thrusts, torques, engine torque, power. Written by the orchestrator, read by everything else. |
+| `HelicopterState` / `IHelicopterState` | Plain C# / read interface | Snapshot of the last simulation step: control positions, blade pitches, rotor speed, disk normal (world and body frame), thrusts, torques, stabilizer force, engine torque, power. Written by the orchestrator, read by everything else. |
 
 Models are **stateful but scene-free**. Each takes a sampled body state (velocities and axes at its
 points, rotor speed) and returns forces and moments; none of them touches the Rigidbody. That keeps
@@ -82,14 +84,15 @@ replaces `RotorModel`'s internals and nothing else.
 
 | Component | Kind | Context | Purpose |
 |---|---|---|---|
-| `FlightSceneInstaller` | MonoInstaller | SceneContext | Binds the scene-level services: the `FlightInput` wrapper, controls, `ActiveHelicopter`. |
-| `HelicopterInstaller` | MonoInstaller | Helicopter GameObjectContext | Serialized config and Rigidbody. Binds the aircraft: parameters, Rigidbody, state, ground probe, orchestrator, registration. |
+| `FlightSceneInstaller` | MonoInstaller | SceneContext | Binds the scene-level services: the `FlightInput` wrapper, controls, `ActiveHelicopter`, session controls. |
+| `HelicopterInstaller` | MonoInstaller | Helicopter GameObjectContext | Serialized config and Rigidbody. Binds the aircraft: parameters, Rigidbody, state, ground probe, orchestrator, registration. Draws the config's force points as Scene-view gizmos when selected. |
+| `SessionControls` | Plain C#, `ITickable` | SceneContext | Reads the Input System `Session` map: R reloads the active scene, Esc quits (leaves play mode in the Editor). Kept apart from `IFlightControls` — not flight controls. |
 | `IFlightControls` / `FlightControls` | Interface / plain C# | SceneContext | Reads the Input System `Flight` action map each frame, applies ramp and hold behaviour, exposes `ControlPositions`. Future joystick, gamepad or scripted sources are further implementations. |
 | `HelicopterSimulation` | Plain C#, `IFixedTickable` | Helicopter | The orchestrator. Owns the models — they are parts of the simulation, not services, so it constructs them from `HelicopterParameters` rather than receiving them from DI. Each fixed step: reads controls, samples the body, steps the models, applies forces to the Rigidbody, writes `HelicopterState`. Also applies the Rigidbody settings on initialize. |
 | `RaycastGroundProbe` | Plain C# | Helicopter | `IGroundProbe` over `Physics.RaycastNonAlloc`, ignoring the helicopter's own colliders. |
 | `IActiveHelicopter` / `ActiveHelicopter` | Interface / plain C# | SceneContext | Registry of the helicopter currently being flown: its transform and `IHelicopterState`. Readers use the interface; only registration uses the class. Lets scene-level objects reach an aircraft that lives in a child context. |
 | `HelicopterRegistration` | Plain C# | Helicopter | Registers the aircraft with `ActiveHelicopter` on initialize, unregisters on dispose. |
-| `RotorVisual` | MonoBehaviour | Helicopter prefab | Spins rotor meshes from rotor speed, tilts the main rotor to the disk normal, swaps to a blur disk at high speed. Its transforms only place visuals — physics geometry comes from the config. |
+| `RotorVisual` | MonoBehaviour | Helicopter prefab | Spins the rotor meshes from rotor speed and tilts the main rotor to the body-frame disk normal, relative to the interpolated body. Its transforms only place visuals — physics geometry comes from the config. |
 | `HelicopterCamera` | MonoBehaviour | Scene | Third-person follow camera on the active helicopter. |
 | `TelemetryOverlay` | MonoBehaviour | Scene | Developer-only IMGUI readout of the active helicopter's `IHelicopterState`. |
 
@@ -114,6 +117,7 @@ does not see the child's. Scene objects that need the aircraft go through `Activ
 | Loop | Who runs | What happens |
 |---|---|---|
 | `Update` | `FlightControls` | Ramps control positions from held keys. |
+| `Update` | `SessionControls` | Restart and quit on key press. |
 | `FixedUpdate` | `HelicopterSimulation` | One simulation step, forces applied before Unity's physics step. |
 | `Update` | `RotorVisual` | Rotor spin integrated at render rate, for smooth motion. |
 | `LateUpdate` | `HelicopterCamera` | Follows the interpolated helicopter transform. |
@@ -127,8 +131,8 @@ directly.
   `IHelicopterState` out of it.
 - **SignalBus** for rare, loosely coupled events only (touchdown, lift-off). None exist yet; none
   are added until a consumer needs one.
-- **UniTask** for asynchronous flow when it arrives — boot, scene loading, timed sequences. The
-  simulation itself is synchronous and never awaits.
+- **UniTask** for asynchronous flow when it arrives — boot, timed sequences. None exists yet: the
+  restart is a synchronous scene load. The simulation itself is synchronous and never awaits.
 
 ## Extension points
 

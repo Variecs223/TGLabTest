@@ -46,6 +46,9 @@ namespace TGLabTest.Gameplay.Presentation
             Line("Vertical speed", $"{velocity.y:+0.0;-0.0} m/s");
             Line("Ground speed", $"{new Vector2(velocity.x, velocity.z).magnitude:F1} m/s");
             Line("Ground contact", state.HasGroundContact ? "yes" : "no");
+            GUILayout.FlexibleSpace();
+            Line("Restart", "R");
+            Line("Quit", "Esc");
 
             GUILayout.EndArea();
         }
