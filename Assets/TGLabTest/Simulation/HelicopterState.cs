@@ -15,6 +15,7 @@ namespace TGLabTest.Simulation
         public float MainRotorDrag { get; set; }
         public float TailRotorThrust { get; set; }
         public float TailRotorDrag { get; set; }
+        public float StabilizerForce { get; set; }
         public float EngineTorque { get; set; }
         public float ShaftTorque { get; set; }
         public float EnginePower { get; set; }

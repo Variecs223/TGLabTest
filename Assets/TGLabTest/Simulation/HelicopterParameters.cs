@@ -11,6 +11,7 @@ namespace TGLabTest.Simulation
         public Vector3 MainHubOffset { get; }
         public Vector3 TailHubOffset { get; }
         public Vector3 CenterOfPressureOffset { get; }
+        public Vector3 StabilizerOffset { get; }
         public IReadOnlyList<Vector3> SkidContactOffsets { get; }
         public int SpinSign { get; }
         public float HoverDrivetrainTorque { get; }
@@ -31,6 +32,7 @@ namespace TGLabTest.Simulation
             MainHubOffset = config.MainHubOffset;
             TailHubOffset = config.TailHubOffset;
             CenterOfPressureOffset = config.CenterOfPressureOffset;
+            StabilizerOffset = config.StabilizerOffset;
             SkidContactOffsets = new List<Vector3>(config.SkidContactOffsets);
             SpinSign = (int)config.SpinDirection;
 
@@ -85,7 +87,8 @@ namespace TGLabTest.Simulation
                 tailGearRatio: config.TailGearRatio,
                 frictionTorque: config.DrivetrainFrictionTorque);
 
-            Fuselage = new FuselageParameters(config.DragAreas, config.AngularDamping, config.AirDensity);
+            Fuselage = new FuselageParameters(
+                config.DragAreas, config.AngularDamping, config.AirDensity, config.StabilizerArea, config.StabilizerLiftSlope);
 
             SkidGear = new SkidGearParameters(
                 stiffness: config.SkidStiffness,

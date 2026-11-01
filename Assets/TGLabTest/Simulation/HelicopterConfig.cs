@@ -20,6 +20,7 @@ namespace TGLabTest.Simulation
         [SerializeField] private Vector3 _mainHubOffset = new Vector3(0f, 1.8f, 0f);
         [SerializeField] private Vector3 _tailHubOffset = new Vector3(0f, 1f, -8.6f);
         [SerializeField] private Vector3 _centerOfPressureOffset = new Vector3(0f, 0f, -0.5f);
+        [SerializeField] private Vector3 _stabilizerOffset = new Vector3(0f, 0f, -6f);
         [SerializeField] private Vector3[] _skidContactOffsets =
         {
             new Vector3(-1.3f, -1.4f, 1.5f),
@@ -62,6 +63,8 @@ namespace TGLabTest.Simulation
         [SerializeField] private Vector3 _dragAreas = new Vector3(10f, 15f, 2f);
         [SerializeField] private Vector3 _angularDamping = Vector3.zero;
         [SerializeField, Min(0f)] private float _airDensity = 1.225f;
+        [SerializeField, Min(0f)] private float _stabilizerArea = 2f;
+        [SerializeField, Min(0f)] private float _stabilizerLiftSlope = 3.5f;
 
         [Header("Skids")]
         [SerializeField, Min(0f)] private float _skidStiffness = 2.1e5f;
@@ -91,6 +94,7 @@ namespace TGLabTest.Simulation
         public Vector3 MainHubOffset => _mainHubOffset;
         public Vector3 TailHubOffset => _tailHubOffset;
         public Vector3 CenterOfPressureOffset => _centerOfPressureOffset;
+        public Vector3 StabilizerOffset => _stabilizerOffset;
         public IReadOnlyList<Vector3> SkidContactOffsets => _skidContactOffsets;
 
         public RotorSpinDirection SpinDirection => _spinDirection;
@@ -124,6 +128,8 @@ namespace TGLabTest.Simulation
         public Vector3 DragAreas => _dragAreas;
         public Vector3 AngularDamping => _angularDamping;
         public float AirDensity => _airDensity;
+        public float StabilizerArea => _stabilizerArea;
+        public float StabilizerLiftSlope => _stabilizerLiftSlope;
 
         public float SkidStiffness => _skidStiffness;
         public float SkidDamping => _skidDamping;

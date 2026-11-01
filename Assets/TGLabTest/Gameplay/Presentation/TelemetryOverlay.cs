@@ -39,6 +39,7 @@ namespace TGLabTest.Gameplay.Presentation
             Line("Rotor", $"{state.RotorSpeed * RpmPerRadianPerSecond:F0} rpm ({state.RotorSpeedRatio:P1})");
             Line("Main thrust", $"{state.MainRotorThrust * Kilo:F1} kN");
             Line("Tail thrust", $"{state.TailRotorThrust * Kilo:F2} kN");
+            Line("Stabilizer", $"{state.StabilizerForce * Kilo:+0.00;-0.00} kN");
             Line("Engine torque", $"{state.EngineTorque * Kilo:F1} kN·m");
             Line("Shaft torque", $"{state.ShaftTorque * Kilo:F1} kN·m");
             Line("Engine power", $"{state.EnginePower * Kilo:F0} kW");

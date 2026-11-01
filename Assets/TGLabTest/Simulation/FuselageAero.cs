@@ -21,6 +21,10 @@ namespace TGLabTest.Simulation
             return -0.5f * _parameters.AirDensity * Vector3.Scale(_parameters.DragAreas, signedSquare);
         }
 
+        public Vector3 StabilizerForce(Vector3 localVelocity) =>
+            Vector3.up * (-0.5f * _parameters.AirDensity * _parameters.StabilizerLiftSlope * _parameters.StabilizerArea
+                          * localVelocity.y * Mathf.Abs(localVelocity.z));
+
         public Vector3 DampingTorque(Vector3 localAngularVelocity) =>
             -Vector3.Scale(_parameters.AngularDamping, localAngularVelocity);
     }

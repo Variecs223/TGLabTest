@@ -19,6 +19,8 @@ namespace TGLabTest.Gameplay.Helicopter
         private readonly SkidGear _skidGear;
         private readonly SkidContactSample[] _skidContacts;
 
+        private float _stabilizerForce;
+
         public HelicopterSimulation(
             HelicopterParameters parameters,
             Rigidbody body,
@@ -97,6 +99,11 @@ namespace TGLabTest.Gameplay.Helicopter
 
             _body.AddForceAtPosition(frame.ToWorld(_fuselage.DragForce(localVelocity)), centerOfPressure);
             _body.AddTorque(frame.ToWorld(_fuselage.DampingTorque(localAngularVelocity)));
+
+            Vector3 stabilizer = frame.PointAt(_parameters.StabilizerOffset);
+            Vector3 stabilizerForce = _fuselage.StabilizerForce(frame.ToLocal(_body.GetPointVelocity(stabilizer)));
+            _body.AddForceAtPosition(frame.ToWorld(stabilizerForce), stabilizer);
+            _stabilizerForce = stabilizerForce.y;
         }
 
         private void ApplySkidForces(in BodyFrame frame)
@@ -129,6 +136,7 @@ namespace TGLabTest.Gameplay.Helicopter
             _state.MainRotorDrag = _mainRotor.DragTorque;
             _state.TailRotorThrust = _tailRotor.Thrust;
             _state.TailRotorDrag = _tailRotor.DragTorque;
+            _state.StabilizerForce = _stabilizerForce;
             _state.EngineTorque = _drivetrain.EngineTorque;
             _state.ShaftTorque = _drivetrain.ShaftTorque;
             _state.EnginePower = _drivetrain.EnginePower;

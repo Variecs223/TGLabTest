@@ -75,7 +75,7 @@ Acceptance checks are in `GAME-DESIGN.md` → *Milestones*.
 
 - [~] `RotorVisual` — spin and disk tilt; blur disk dropped (blades only, HDRP motion blur to try). Code written; prefab wiring and eye test **(you)**
 - [x] ~~Camera polish~~ — current camera accepted
-- [ ] Milestone 5 — tuning against the targets **(you, mostly)**
+- [~] Milestone 5 — tuning against the targets **(you, mostly)**. Goal: holding W flies forward without flipping. Tilt reduced to 4° / 3° (not enough alone); horizontal stabilizer added, eye test pending; flapback 1.0 next if needed
 
 ## 9. Close-out
 
